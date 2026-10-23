@@ -1,0 +1,17 @@
+## SPDX-License-Identifier: GPL-2.0-only
+
+if VENDOR_XIAOMI
+
+choice
+	prompt "Mainboard model"
+
+source "src/mainboard/xiaomi/*/Kconfig.name"
+
+endchoice
+
+source "src/mainboard/xiaomi/*/Kconfig"
+
+config MAINBOARD_VENDOR
+	default "Xiaomi"
+
+endif # VENDOR_XIAOMI

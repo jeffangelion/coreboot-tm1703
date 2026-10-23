@@ -1,0 +1,40 @@
+## SPDX-License-Identifier: GPL-2.0-only
+
+if BOARD_XIAOMI_TM1703
+
+config BOARD_SPECIFIC_OPTIONS
+    def_bool n
+    select BOARD_ROMSIZE_KB_16384
+    select HAVE_ACPI_RESUME
+    select HAVE_ACPI_TABLES
+    select HAVE_SPD_IN_CBFS
+    select INTEL_GMA_HAVE_VBT
+    select MAINBOARD_HAS_LIBGFXINIT
+    select SOC_INTEL_COMMON_BLOCK_HDA_VERB
+    select SOC_INTEL_KABYLAKE
+    select SYSTEM_TYPE_LAPTOP
+
+config MAINBOARD_DIR
+	default "xiaomi/tm1703"
+
+config MAINBOARD_PART_NUMBER
+	default "Mi Notebook Air 13.3\" (TM1703)"
+
+config VGA_BIOS_ID
+	string
+	default "8086,5917"
+
+config INTEL_GMA_VBT_FILE
+	default "src/mainboard/\$(MAINBOARDDIR)/data.vbt"
+
+config DIMM_SPD_SIZE
+    default 512
+
+config CBFS_SIZE
+	default 0x66f800
+
+# This platform has limited means to display POST codes
+config NO_POST
+    default y
+
+endif

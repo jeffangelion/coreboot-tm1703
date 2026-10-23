@@ -1,0 +1,4 @@
+## SPDX-License-Identifier: GPL-2.0-only
+
+config BOARD_XIAOMI_TM1703
+	bool "Mi Notebook Air 13.3\" (TM1703)"
