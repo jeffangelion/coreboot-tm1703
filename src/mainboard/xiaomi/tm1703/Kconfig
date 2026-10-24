@@ -27,6 +27,12 @@ config VGA_BIOS_ID
 config INTEL_GMA_VBT_FILE
 	default "src/mainboard/\$(MAINBOARDDIR)/data.vbt"
 
+config FMDFILE
+	default "src/mainboard/xiaomi/tm1703/board.fmd"
+
+config CONSOLE_SPI_FLASH_BUFFER_SIZE
+	default 0x20000
+
 config DIMM_MAX
 	default 1
 
@@ -35,6 +41,12 @@ config DIMM_SPD_SIZE
 
 config CBFS_SIZE
 	default 0x46f800
+
+config MRC_SETTINGS_CACHE_SIZE
+	default 0x10000
+
+config MRC_SETTINGS_PROTECT
+	default y
 
 # This platform has limited means to display POST codes
 config NO_POST
