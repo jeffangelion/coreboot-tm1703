@@ -1,0 +1,54 @@
+jeffangelion@aspire-es11:~$ minipro -p 'W25Q128JV@SOIC8' --vcc=3.3 -r test4.bin
+Found T48 00.1.39 (0x127)
+Warning: T48 support is not yet complete!
+Warning: Firmware is newer than expected.
+  Expected  01.1.35 (0x123)
+  Found     00.1.39 (0x127)
+Device code: 5AA34593
+Serial code: 04FKRCTC1Q6MGPJJ2B0Q7383
+Manufactured: 2025-10-1407:54
+USB speed: 480Mbps (USB 2.0)
+Supply voltage: 5.00 V 
+
+Chip ID: 0xEF4018  OK
+SPI Clock: 8 MHz
+Reading Code...  22.42 Sec  OK
+jeffangelion@aspire-es11:~$ minipro -p 'W25Q128JV@SOIC8' --vcc=3.3 -r test5.bin
+Found T48 00.1.39 (0x127)
+Warning: T48 support is not yet complete!
+Warning: Firmware is newer than expected.
+  Expected  01.1.35 (0x123)
+  Found     00.1.39 (0x127)
+Device code: 5AA34593
+Serial code: 04FKRCTC1Q6MGPJJ2B0Q7383
+Manufactured: 2025-10-1407:54
+USB speed: 480Mbps (USB 2.0)
+Supply voltage: 5.00 V 
+
+Chip ID: 0xEF4018  OK
+SPI Clock: 8 MHz
+Reading Code...  22.50 Sec  OK
+jeffangelion@aspire-es11:~$ minipro -p 'W25Q128JV@SOIC8' --vcc=3.3 -r test6.bin
+Found T48 00.1.39 (0x127)
+Warning: T48 support is not yet complete!
+Warning: Firmware is newer than expected.
+  Expected  01.1.35 (0x123)
+  Found     00.1.39 (0x127)
+Device code: 5AA34593
+Serial code: 04FKRCTC1Q6MGPJJ2B0Q7383
+Manufactured: 2025-10-1407:54
+USB speed: 480Mbps (USB 2.0)
+Supply voltage: 4.99 V 
+
+Chip ID: 0xEF4018  OK
+SPI Clock: 8 MHz
+Reading Code...  22.56 Sec  OK
+jeffangelion@aspire-es11:~$ sha1sum test*.bin
+90fdffb470f070bfc3377b57e75a36513b65d39f  test1.bin
+90fdffb470f070bfc3377b57e75a36513b65d39f  test2.bin
+90fdffb470f070bfc3377b57e75a36513b65d39f  test3.bin
+bbe6d02ea6ac82199ddcd0128516ee495765eafd  test4.bin
+bbe6d02ea6ac82199ddcd0128516ee495765eafd  test5.bin
+bbe6d02ea6ac82199ddcd0128516ee495765eafd  test6.bin
+jeffangelion@aspire-es11:~$ 
+
