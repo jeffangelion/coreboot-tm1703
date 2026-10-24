@@ -1,0 +1,390 @@
+jeffangelion@mibook:~$ sudo dmidecode -t 0 -t 2
+# dmidecode 3.6
+Getting SMBIOS data from sysfs.
+SMBIOS 3.0.0 present.
+
+Handle 0x0000, DMI type 0, 24 bytes
+BIOS Information
+  Vendor: Insyde Corp.
+  Version: XMAKB3M0P1710
+  Release Date: 04/23/2019
+  Address: 0xE0000
+  Runtime Size: 128 kB
+  ROM Size: 8 MB
+  Characteristics:
+    PCI is supported
+    BIOS is upgradeable
+    BIOS shadowing is allowed
+    Boot from CD is supported
+    Selectable boot is supported
+    EDD is supported
+    8042 keyboard services are supported (int 9h)
+    CGA/mono video services are supported (int 10h)
+    ACPI is supported
+    USB legacy is supported
+    BIOS boot specification is supported
+    Targeted content distribution is supported
+    UEFI is supported
+  BIOS Revision: 1.23
+  Firmware Revision: 1.16
+
+Handle 0x0002, DMI type 2, 17 bytes
+Base Board Information
+  Manufacturer: Timi
+  Product Name: TM1703
+  Version: XMAKB3M0P1710
+  Serial Number: 1234567890123456789012
+  Asset Tag: No Asset Tag
+  Features:
+    Board is a hosting board
+    Board is replaceable
+  Location In Chassis: Type2 - Board Chassis Location  
+  Chassis Handle: 0x0003
+  Type: Motherboard
+  Contained Object Handles: 0
+
+jeffangelion@mibook:~$ lscpu | grep 'Model name'
+Model name:                              Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz
+jeffangelion@mibook:~$ lspci -nn
+00:00.0 Host bridge [0600]: Intel Corporation Xeon E3-1200 v6/7th Gen Core Processor Host Bridge/DRAM Registers [8086:5914] (rev 08)
+00:02.0 VGA compatible controller [0300]: Intel Corporation UHD Graphics 620 [8086:5917] (rev 07)
+00:14.0 USB controller [0c03]: Intel Corporation Sunrise Point-LP USB 3.0 xHCI Controller [8086:9d2f] (rev 21)
+00:15.0 Signal processing controller [1180]: Intel Corporation Sunrise Point-LP Serial IO I2C Controller #0 [8086:9d60] (rev 21)
+00:15.1 Signal processing controller [1180]: Intel Corporation Sunrise Point-LP Serial IO I2C Controller #1 [8086:9d61] (rev 21)
+00:16.0 Communication controller [0780]: Intel Corporation Sunrise Point-LP CSME HECI #1 [8086:9d3a] (rev 21)
+00:17.0 SATA controller [0106]: Intel Corporation Sunrise Point-LP SATA Controller [AHCI mode] [8086:9d03] (rev 21)
+00:1c.0 PCI bridge [0604]: Intel Corporation Sunrise Point-LP PCI Express Root Port #1 [8086:9d10] (rev f1)
+00:1c.4 PCI bridge [0604]: Intel Corporation Sunrise Point-LP PCI Express Root Port #5 [8086:9d14] (rev f1)
+00:1d.0 PCI bridge [0604]: Intel Corporation Sunrise Point-LP PCI Express Root Port #9 [8086:9d18] (rev f1)
+00:1f.0 ISA bridge [0601]: Intel Corporation Sunrise Point LPC/eSPI Controller [8086:9d4e] (rev 21)
+00:1f.2 Memory controller [0580]: Intel Corporation Sunrise Point-LP PMC [8086:9d21] (rev 21)
+00:1f.3 Audio device [0403]: Intel Corporation Sunrise Point-LP HD Audio [8086:9d71] (rev 21)
+00:1f.4 SMBus [0c05]: Intel Corporation Sunrise Point-LP SMBus [8086:9d23] (rev 21)
+01:00.0 3D controller [0302]: NVIDIA Corporation GP108M [GeForce MX150] [10de:1d12] (rev a1)
+02:00.0 Network controller [0280]: Intel Corporation Wireless 8265 / 8275 [8086:24fd] (rev 78)
+03:00.0 Non-Volatile memory controller [0108]: SK hynix PC401 NVMe Solid State Drive 256GB [1c5c:1527]
+jeffangelion@mibook:~$ sudo flashrom -p internal
+flashrom 1.4.0 on Linux 6.12.111+deb13-amd64 (x86_64)
+flashrom is free software, get the source code at https://flashrom.org
+
+No DMI table found.
+Found chipset "Intel Kaby Lake U w/ iHDCP2.2 Prem.".
+Enabling flash write... SPI Configuration is locked down.
+FREG0: Flash Descriptor region (0x00000000-0x00000fff) is read-write.
+FREG1: BIOS region (0x00900000-0x00ffffff) is read-write.
+FREG2: Management Engine region (0x00001000-0x008fffff) is read-write.
+PR0: Warning: 0x00ec0000-0x00ffffff is read-only.
+PR1: Warning: 0x00940000-0x00d3ffff is read-only.
+At least some flash regions are write protected. For write operations,
+you should use a flash layout and include only writable regions. See
+manpage for more details.
+Enabling hardware sequencing because some important opcode is locked.
+OK.
+Found Winbond flash chip "W25Q128.V" (16384 kB, Programmer-specific) on internal.
+No operations were specified.
+jeffangelion@mibook:~$ sudo ectool
+usage: ectool [-vh?Vidq] [-w 0x<addr> -z 0x<data>]
+
+   -v | --version:                   print the version
+   -h | --help:                      print this help
+
+   -V | --verbose:                   print debug information
+   -p | --getports:                  get EC data & cmd ports from /proc/ioports
+   -d | --dump:                      print RAM
+   -i | --idx:                       print IDX RAM & RAM
+   -q | --query:                     print query byte
+   -w <addr in hex>                  write to addr
+   -z <data in hex>                  write to data
+
+jeffangelion@mibook:~$ sudo ectool -V
+EC RAM:
+
+
+00: recv_ec_data: 0x00
+00 recv_ec_data: 0x20
+20 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x10
+10 recv_ec_data: 0x01
+01 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x30
+30 
+10: recv_ec_data: 0x13
+13 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+20: recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+30: recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+40: recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x02
+02 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x02
+02 
+50: recv_ec_data: 0x10
+10 recv_ec_data: 0x09
+09 recv_ec_data: 0x03
+03 recv_ec_data: 0x00
+00 recv_ec_data: 0xc0
+c0 recv_ec_data: 0x1e
+1e recv_ec_data: 0x04
+04 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x8c
+8c recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x06
+06 recv_ec_data: 0x00
+00 recv_ec_data: 0x02
+02 recv_ec_data: 0x00
+00 
+60: recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+70: recv_ec_data: 0x42
+42 recv_ec_data: 0x03
+03 recv_ec_data: 0x04
+04 recv_ec_data: 0x00
+00 recv_ec_data: 0x08
+08 recv_ec_data: 0x61
+61 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0xff
+ff recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+80: recv_ec_data: 0x23
+23 recv_ec_data: 0x05
+05 recv_ec_data: 0x0a
+0a recv_ec_data: 0x05
+05 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x73
+73 recv_ec_data: 0x0d
+0d recv_ec_data: 0x00
+00 recv_ec_data: 0x01
+01 recv_ec_data: 0x01
+01 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+90: recv_ec_data: 0x00
+00 recv_ec_data: 0x13
+13 recv_ec_data: 0x00
+00 recv_ec_data: 0x04
+04 recv_ec_data: 0xff
+ff recv_ec_data: 0xff
+ff recv_ec_data: 0x04
+04 recv_ec_data: 0xff
+ff recv_ec_data: 0xff
+ff recv_ec_data: 0xc2
+c2 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x14
+14 recv_ec_data: 0x0c
+0c 
+a0: recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x2a
+2a recv_ec_data: 0x24
+24 recv_ec_data: 0x29
+29 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+b0: recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x80
+80 recv_ec_data: 0x90
+90 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x18
+18 recv_ec_data: 0x09
+09 recv_ec_data: 0x47
+47 recv_ec_data: 0x8c
+8c recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+c0: recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+d0: recv_ec_data: 0x62
+62 recv_ec_data: 0x63
+63 recv_ec_data: 0x5d
+5d recv_ec_data: 0x5c
+5c recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+e0: recv_ec_data: 0x72
+72 recv_ec_data: 0x05
+05 recv_ec_data: 0xd4
+d4 recv_ec_data: 0x12
+12 recv_ec_data: 0x1d
+1d recv_ec_data: 0x00
+00 recv_ec_data: 0x44
+44 recv_ec_data: 0xfb
+fb recv_ec_data: 0xb8
+b8 recv_ec_data: 0x1c
+1c recv_ec_data: 0x00
+00 recv_ec_data: 0x60
+60 recv_ec_data: 0x22
+22 recv_ec_data: 0xfc
+fc recv_ec_data: 0x9c
+9c recv_ec_data: 0x0b
+0b 
+f0: recv_ec_data: 0x30
+30 recv_ec_data: 0x57
+57 recv_ec_data: 0x2e
+2e recv_ec_data: 0x30
+30 recv_ec_data: 0x32
+32 recv_ec_data: 0x4d
+4d recv_ec_data: 0x4c
+4c recv_ec_data: 0x2e
+2e recv_ec_data: 0x30
+30 recv_ec_data: 0x31
+31 recv_ec_data: 0x2e
+2e recv_ec_data: 0x31
+31 recv_ec_data: 0x36
+36 recv_ec_data: 0x20
+20 recv_ec_data: 0x00
+00 recv_ec_data: 0x00
+00 
+
+jeffangelion@mibook:~$ ls /sys/class/power_supply /sys/firmware/acpi
+/sys/class/power_supply:
+ADP1  BAT0  ucsi-source-psy-USBC000:001
+
+/sys/firmware/acpi:
+bgrt  hotplug  interrupts  pm_profile  tables
+jeffangelion@mibook:~$ sudo acpidump > acpi.bin
+jeffangelion@mibook:~$ iasl -d
+
+Intel ACPI Component Architecture
+ASL+ Optimizing Compiler/Disassembler version 20250404
+Copyright (c) 2000 - 2025 Intel Corporation
+
+jeffangelion@mibook:~$
+
