@@ -27,3 +27,17 @@ void mainboard_fill_dqs_map_data(void *dqs_map_ptr)
 
 	memcpy(dqs_map_ptr, dqs_map, sizeof(dqs_map));
 }
+
+void mainboard_fill_rcomp_res_data(void *rcomp_ptr)
+{
+	static const uint16_t rcomp_resistor[3] = { 200, 81, 162 };
+
+	memcpy(rcomp_ptr, rcomp_resistor, sizeof(rcomp_resistor));
+}
+
+void mainboard_fill_rcomp_strength_data(void *rcomp_strength_ptr)
+{
+	static const uint16_t rcomp_target[5] = { 100, 40, 40, 23, 40 };
+
+	memcpy(rcomp_strength_ptr, rcomp_target, sizeof(rcomp_target));
+}
