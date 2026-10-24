@@ -1,4 +1,35 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 chip soc/intel/skylake
-# FIXME
+
+	register "eist_enable" = "true"
+	register "DspEnable" = "false"
+	register "SkipExtGfxScan" = "1"
+	register "SaGv" = "SaGv_Enabled"
+	register "PmConfigSlpS3MinAssert" = "2"
+	register "PmConfigSlpS4MinAssert" = "1"
+	register "PmConfigSlpSusMinAssert" = "3"
+	register "PmConfigSlpAMinAssert" = "3"
+
+	device domain 0 on
+		device ref igpu on
+			register "gfx" = "GMA_STATIC_DISPLAYS(0)"
+			register "panel_cfg" = "{
+				.up_delay_ms = 200,
+				.down_delay_ms = 50,
+				.cycle_delay_ms = 500,
+				.backlight_on_delay_ms = 1,
+				.backlight_off_delay_ms = 200,
+				.backlight_pwm_hz = 200,
+			}"
+		end
+		device ref sa_thermal on end
+		device ref thermal on end
+		device ref south_xhci on end
+		device ref sata on end
+		device ref hda on end
+		device ref smbus on end
+		device ref fast_spi on end
+		device ref lpc_espi on end
+	end
+end

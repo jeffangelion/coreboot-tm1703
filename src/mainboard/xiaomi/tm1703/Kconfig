@@ -3,8 +3,9 @@
 if BOARD_XIAOMI_TM1703
 
 config BOARD_SPECIFIC_OPTIONS
-    def_bool n
+    def_bool y
     select BOARD_ROMSIZE_KB_16384
+    select CONSOLE_SPI_FLASH
     select HAVE_ACPI_RESUME
     select HAVE_ACPI_TABLES
     select HAVE_SPD_IN_CBFS
@@ -21,17 +22,19 @@ config MAINBOARD_PART_NUMBER
 	default "Mi Notebook Air 13.3\" (TM1703)"
 
 config VGA_BIOS_ID
-	string
 	default "8086,5917"
 
 config INTEL_GMA_VBT_FILE
 	default "src/mainboard/\$(MAINBOARDDIR)/data.vbt"
 
+config DIMM_MAX
+	default 1
+
 config DIMM_SPD_SIZE
     default 512
 
 config CBFS_SIZE
-	default 0x66f800
+	default 0x46f800
 
 # This platform has limited means to display POST codes
 config NO_POST
