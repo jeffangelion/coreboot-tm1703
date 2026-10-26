@@ -2,5 +2,10 @@
 
 #include <soc/ramstage.h>
 
-/* TM1703 has no board GPIO table yet. Keep SiliconInit usable while the
- * pin-to-function map is being recovered from the OEM firmware. */
+#include "gpio.h"
+
+void mainboard_silicon_init_params(FSP_SIL_UPD *params)
+{
+	/* Configure board pads before FSP SiliconInit(). */
+	gpio_configure_pads(gpio_table, ARRAY_SIZE(gpio_table));
+}

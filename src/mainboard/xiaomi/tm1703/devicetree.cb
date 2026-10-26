@@ -30,6 +30,23 @@ chip soc/intel/skylake
 		device ref hda on end
 		device ref smbus on end
 		device ref fast_spi on end
+		device ref pcie_rp1 on
+			# NVIDIA GP108M discrete GPU, PCIe x4.
+			register "PcieRpClkReqSupport[0]" = "false"
+			register "PcieRpClkSrcNumber[0]" = "2"
+		end
+		device ref pcie_rp5 on
+			# Intel Wireless 8265, PCIe x1.
+			register "PcieRpClkReqSupport[4]" = "true"
+			register "PcieRpClkReqNumber[4]" = "0"
+			register "PcieRpClkSrcNumber[4]" = "3"
+		end
+		device ref pcie_rp9 on
+			# M.2 NVMe SSD, PCIe x4.
+			register "PcieRpClkReqSupport[8]" = "true"
+			register "PcieRpClkReqNumber[8]" = "1"
+			register "PcieRpClkSrcNumber[8]" = "5"
+		end
 		device ref lpc_espi on end
 	end
 end

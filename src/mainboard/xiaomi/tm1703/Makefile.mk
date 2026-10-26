@@ -27,3 +27,4 @@ add_tm1703_ec: add_intel_firmware $(TM1703_EC_FW)
 	dd if=$(TM1703_EC_FW) of=$(obj)/coreboot.pre bs=1 seek=9437184 conv=notrunc status=none
 
 $(obj)/coreboot.rom: add_tm1703_ec
+$(obj)/coreboot.rom: payloads/coreinfo/build/coreinfo.elf

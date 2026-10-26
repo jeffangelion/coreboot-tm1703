@@ -13,7 +13,9 @@ config BOARD_SPECIFIC_OPTIONS
     select MAINBOARD_HAS_LIBGFXINIT
     select SOC_INTEL_COMMON_BLOCK_HDA_VERB
     select SOC_INTEL_KABYLAKE
+    select SOC_INTEL_SKYLAKE_DISABLE_FSP_EOP
     select SYSTEM_TYPE_LAPTOP
+    select USE_INTEL_FSP_MP_INIT
 
 config MAINBOARD_DIR
 	default "xiaomi/tm1703"
@@ -31,7 +33,15 @@ config FMDFILE
 	default "src/mainboard/xiaomi/tm1703/board.fmd"
 
 config CONSOLE_SPI_FLASH_BUFFER_SIZE
-	default 0x20000
+	default 0x180000
+
+config TM1703_DEBUG_FSP
+	bool "Log FSP calls and status"
+	default y
+	select DISPLAY_FSP_CALLS_AND_STATUS
+	help
+	  Log FspSiliconInit calls and return status to flashconsole during
+	  early board bring-up.
 
 config DIMM_MAX
 	default 1
@@ -47,6 +57,10 @@ config MRC_SETTINGS_CACHE_SIZE
 
 config MRC_SETTINGS_PROTECT
 	default y
+
+# Use coreinfo when an ELF payload is selected for early bring-up.
+config PAYLOAD_FILE
+	default "payloads/coreinfo/build/coreinfo.elf"
 
 # This platform has limited means to display POST codes
 config NO_POST
