@@ -3,29 +3,29 @@
 if BOARD_XIAOMI_TM1703
 
 config BOARD_SPECIFIC_OPTIONS
-    def_bool y
-    select BOARD_ROMSIZE_KB_16384
-    select CONSOLE_SPI_FLASH
-    select HAVE_ACPI_RESUME
-    select HAVE_ACPI_TABLES
-    select HAVE_SPD_IN_CBFS
-    select INTEL_GMA_HAVE_VBT
-    select MAINBOARD_HAS_LIBGFXINIT
-    select SOC_INTEL_COMMON_BLOCK_HDA_VERB
-    select SOC_INTEL_KABYLAKE
-    select SYSTEM_TYPE_LAPTOP
+	def_bool y
+	select BOARD_ROMSIZE_KB_16384
+	select CONSOLE_SPI_FLASH
+	select HAVE_ACPI_RESUME
+	select HAVE_ACPI_TABLES
+	select HAVE_SPD_IN_CBFS
+	select INTEL_GMA_HAVE_VBT
+	select MAINBOARD_HAS_LIBGFXINIT
+	select SOC_INTEL_COMMON_BLOCK_HDA_VERB
+	select SOC_INTEL_KABYLAKE
+	select SYSTEM_TYPE_LAPTOP
 
 config MAINBOARD_DIR
 	default "xiaomi/tm1703"
 
 config MAINBOARD_PART_NUMBER
-	default "Mi Notebook Air 13.3\" (TM1703)"
+	default "Mi Notebook Air 13.3-inch (TM1703)"
 
 config VGA_BIOS_ID
 	default "8086,5917"
 
 config INTEL_GMA_VBT_FILE
-	default "src/mainboard/\$(MAINBOARDDIR)/data.vbt"
+	default "3rdparty/blobs/mainboard/\$(MAINBOARDDIR)/vbt.bin"
 
 config FMDFILE
 	default "src/mainboard/xiaomi/tm1703/board.fmd"
@@ -45,7 +45,7 @@ config DIMM_MAX
 	default 1
 
 config DIMM_SPD_SIZE
-    default 512
+	default 512
 
 config CBFS_SIZE
 	default 0x46f800
@@ -62,6 +62,6 @@ config PAYLOAD_FILE
 
 # This platform has limited means to display POST codes
 config NO_POST
-    default y
+	default y
 
 endif

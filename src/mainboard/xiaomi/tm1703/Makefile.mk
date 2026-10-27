@@ -18,7 +18,7 @@ ramstage-$(CONFIG_MAINBOARD_USE_LIBGFXINIT) += gma-mainboard.ads
 
 # The TM1703 EC is stored outside the IFD EC region, at 0x900000.
 # Add it after the descriptor and ME have been stitched.
-TM1703_EC_FW := $(src)/mainboard/xiaomi/tm1703/ec_0W.02ML.01.16.bin
+TM1703_EC_FW := 3rdparty/blobs/mainboard/$(MAINBOARDDIR)/ec.bin
 
 PHONY += add_tm1703_ec
 

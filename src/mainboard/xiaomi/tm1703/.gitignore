@@ -1,0 +1,4 @@
+# Proprietary files must be extracted locally from a user-owned firmware dump.
+/data.vbt
+/ec_*.bin
+/ec_*.bin-blob
