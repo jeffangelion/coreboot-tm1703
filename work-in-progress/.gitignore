@@ -1,0 +1,10 @@
+# This directory holds local dumps, test images, reverse-engineering output,
+# and third-party tools. Keep them out of the source tree and commits.
+/*
+!/.gitignore
+!/README.md
+!/docs/
+/docs/*
+!/docs/TM1703-PROGRESS.md
+!/docs/TM1703-RULES.md
+!/docs/TM1703-SAFETY.md
