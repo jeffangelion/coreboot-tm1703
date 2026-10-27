@@ -5,9 +5,8 @@
 #include <fmap.h>
 #include <console/console.h>
 #include <console/flash.h>
-#include <types.h>
-
 #include <smp/node.h>
+#include <types.h>
 
 #define LINE_BUFFER_SIZE 128
 #define READ_BUFFER_SIZE 0x100
@@ -71,7 +70,7 @@ void flashconsole_init(void)
 
 void flashconsole_tx_byte(unsigned char c)
 {
-	 /* HACK: APs must not touch SPI/timer concurrently with BSP */
+	/* The flashconsole state and SPI accesses are not synchronized. */
 	if (ENV_RAMSTAGE && !boot_cpu())
 		return;
 	if (!rdev_ptr)
@@ -90,13 +89,19 @@ void flashconsole_tx_byte(unsigned char c)
 
 void flashconsole_tx_flush(void)
 {
-	size_t len = line_offset;
+	size_t len;
 	size_t region_size;
 
 	/* Prevent any recursive loops in case the spi flash driver
 	 * calls printk (in case of transaction timeout or
 	 * any other error while writing) */
 	static bool busy;
+
+	/* The flashconsole state and SPI accesses are not synchronized. */
+	if (ENV_RAMSTAGE && !boot_cpu())
+		return;
+
+	len = line_offset;
 
 	/* In addition to being an obvious runtime optimization, checking for
 	 * len = 0 also prevents false disabling of the driver, as rdev_writeat
