@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-only
 Stock BIOS offset,Vendor,Model,Fix required?,What fix?
 0xEC7DF8,Micron,4ATF51264HZ-2G3AZ,Yes,byte order for CRC
 0xEC7FF8,SK Hynix,HMAA51S6AMR6N-UH,No,-
