@@ -132,6 +132,9 @@ static void sa_lockdown_config(int chipset_lockdown)
 static void platform_lockdown_config(void *unused)
 {
 	int chipset_lockdown;
+	/* TM1703 f9 diagnostic: defer chipset lockdown until the reset is understood. */
+	return;
+
 	chipset_lockdown = get_lockdown_config();
 
 	/* SPI lock down configuration */

@@ -13,18 +13,11 @@
 void mainboard_memory_init_params(FSPM_UPD *mupd)
 {
 	FSP_M_CONFIG *const mem_cfg = &mupd->FspmConfig;
-	FSP_M_TEST_CONFIG *const test_cfg = &mupd->FspmTestConfig;
 	const uint8_t *spd;
 	const unsigned int spd_index = gpio_get(GPP_D0) |
 		(gpio_get(GPP_D1) << 1) |
 		(gpio_get(GPP_D2) << 2) |
 		(gpio_get(GPP_D3) << 3);
-
-	/* Do not send the FSP ChipsetInit configuration to CSE over HECI. */
-	test_cfg->ChipsetInitMessage = 0;
-
-	/* f31 diagnostic: do not send the FSP Memory DID message to CSE. */
-	test_cfg->SendDidMsg = 0;
 
 	printk(BIOS_INFO, "TM1703 memory strap index: %u\n", spd_index);
 
@@ -46,5 +39,4 @@ void mainboard_memory_init_params(FSPM_UPD *mupd)
 	printk(BIOS_INFO, "TM1703 SPD CRC: base=%04x/%04x module=%04x/%04x\n",
 	       ddr_crc16(spd, 126), spd[126] | (spd[127] << 8),
 	       ddr_crc16(spd + 128, 126), spd[254] | (spd[255] << 8));
-	hexdump(spd, 16);
 }

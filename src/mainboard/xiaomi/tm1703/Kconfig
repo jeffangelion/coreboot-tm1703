@@ -13,9 +13,7 @@ config BOARD_SPECIFIC_OPTIONS
     select MAINBOARD_HAS_LIBGFXINIT
     select SOC_INTEL_COMMON_BLOCK_HDA_VERB
     select SOC_INTEL_KABYLAKE
-    select SOC_INTEL_SKYLAKE_DISABLE_FSP_EOP
     select SYSTEM_TYPE_LAPTOP
-    select USE_INTEL_FSP_MP_INIT
 
 config MAINBOARD_DIR
 	default "xiaomi/tm1703"
@@ -37,7 +35,7 @@ config CONSOLE_SPI_FLASH_BUFFER_SIZE
 
 config TM1703_DEBUG_FSP
 	bool "Log FSP calls and status"
-	default y
+	default n
 	select DISPLAY_FSP_CALLS_AND_STATUS
 	help
 	  Log FspSiliconInit calls and return status to flashconsole during
