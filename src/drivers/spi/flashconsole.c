@@ -7,6 +7,8 @@
 #include <console/flash.h>
 #include <types.h>
 
+#include <smp/node.h>
+
 #define LINE_BUFFER_SIZE 128
 #define READ_BUFFER_SIZE 0x100
 
@@ -69,6 +71,11 @@ void flashconsole_init(void)
 
 void flashconsole_tx_byte(unsigned char c)
 {
+	 /* HACK: APs must not touch SPI/timer concurrently with BSP */
+	if (ENV_RAMSTAGE && !boot_cpu())
+		return;
+	if (!rdev_ptr)
+		return;
 	if (!rdev_ptr)
 		return;
 
