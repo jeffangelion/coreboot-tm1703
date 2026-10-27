@@ -132,7 +132,6 @@ static void sa_lockdown_config(int chipset_lockdown)
 static void platform_lockdown_config(void *unused)
 {
 	int chipset_lockdown;
-
 	chipset_lockdown = get_lockdown_config();
 
 	/* SPI lock down configuration */
