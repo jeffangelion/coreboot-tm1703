@@ -39,6 +39,7 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_NF(GPP_B1, NONE, DEEP, NF1),		/* CORE_VID1 */
 	PAD_CFG_NF(GPP_B2, NONE, DEEP, NF1),		/* VRALERT# */
 	PAD_CFG_GPI_APIC_HIGH(GPP_B3, NONE, PLTRST),	/* Touchpad interrupt, IRQ 51 */
+	PAD_CFG_GPO(GPP_B4, 1, DEEP),			/* Bluetooth RF Kill (BT_DISABLE#) */
 	PAD_CFG_NF(GPP_B5, NONE, DEEP, NF1),		/* SRCCLKREQ0# */
 	PAD_CFG_NF(GPP_B6, NONE, DEEP, NF1),		/* SRCCLKREQ1# */
 	PAD_CFG_NF(GPP_B7, NONE, DEEP, NF1),		/* SRCCLKREQ2# */
@@ -104,7 +105,9 @@ static const struct pad_config gpio_table[] = {
 	PAD_NC(GPP_D23, NONE),
 
 	/* ------- GPIO Group GPP_E ------- */
+	PAD_CFG_GPO(GPP_E3, 1, DEEP),
 	PAD_CFG_NF(GPP_E4, NONE, RSMRST, NF1),		/* SATA_DEVSLP0 */
+	PAD_CFG_TERM_GPO(GPP_E5, 1, DN_20K, DEEP),
 	PAD_CFG_NF(GPP_E6, NONE, RSMRST, NF1),		/* SATA_DEVSLP2 */
 	PAD_NC(GPP_E7, NONE),
 	PAD_NC(GPP_E8, NONE),
@@ -164,6 +167,8 @@ static const struct pad_config gpio_table[] = {
 	PAD_NC(GPP_F23, NONE),
 
 	/* ------- GPIO Group GPP_G ------- */
+	PAD_CFG_GPO(GPP_G0, 1, PLTRST),
+	PAD_CFG_GPO(GPP_G5, 1, DEEP),
 	PAD_NC(GPP_G6, NONE),
 	PAD_NC(GPP_G7, NONE),
 };
