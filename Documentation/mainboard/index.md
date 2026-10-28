@@ -463,3 +463,11 @@ X2F-N100 <topton/adl/x2f-n100.md>
 
 Squared <up/squared/index.md>
 ```
+
+## Xiaomi
+
+```{toctree}
+:maxdepth: 1
+
+Mi Notebook Air 13.3-inch (TM1703) <xiaomi/tm1703.md>
+```
