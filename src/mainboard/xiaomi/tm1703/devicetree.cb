@@ -30,6 +30,7 @@ chip soc/intel/skylake
 		device ref sata on end
 		device ref hda on end
 		device ref smbus on end
+		device ref i2c1 on end
 		device ref fast_spi on end
 		device ref pcie_rp1 on
 			# NVIDIA GP108M discrete GPU, PCIe x4.
