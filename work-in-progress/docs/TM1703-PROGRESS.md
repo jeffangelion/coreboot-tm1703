@@ -50,8 +50,13 @@
   баннер и интерфейс SeaBIOS вывелись на дисплей, клавиатура отвечает. Выявлено,
   что установленный на NVMe Linux использует разметку GPT/UEFI.
 - g8: переход на EDK2 (UefiPayloadPkg от MrChromebox) и линейный фреймбуфер
-  (`CONFIG_GENERIC_LINEAR_FRAMEBUFFER=y`). Цель — нативная загрузка установленной
-  UEFI ОС с NVMe ESP-раздела.
+  (`CONFIG_GENERIC_LINEAR_FRAMEBUFFER=y`). Результат подтверждён на железе: EDK2
+  успешно выводит графику, клавиатура работает, доступен UEFI Shell. Выявлено
+  падение PCIe-линка NVMe (`DLActive=0`, опрос `03:00.0` возвращает `0xFF`) из-за
+  включения субсостояний L1 (`PCIEXP_L1_SUB_STATE`) и `PcieRpClkReqSupport[8]`.
+- g9: отключение `PCIEXP_L1_SUB_STATE`, отключение `PCIEXP_CLK_PM` и перевод
+  `PcieRpClkReqSupport[8]` в `false` в соответствии с заводской конфигурацией Xiaomi
+  для предотвращения падения линка NVMe в L1.2.
 - Текущая глобальная цель — эпоха `g`, запуск Linux и продолжение настройки периферии (тачпад, Type-C / UCSI, GPIO-таблица).
 
 Ранние разделы ниже сохранены как журнал гипотез и экспериментов; их промежуточные
@@ -1092,6 +1097,40 @@ UEFI-совместимого payload.
 Ожидаемый результат: запуск EDK2, отображение графического интерфейса UEFI
 (логотип coreboot / GOP), обнаружение ESP-раздела на NVMe и успешная загрузка
 установленного дистрибутива Linux.
+
+Результат: успешно подтверждено на железе. EDK2 запускается, выводит графику
+(Full HD) через GOP, PS/2 клавиатура работает, меню загрузки и интерактивный
+UEFI Shell доступны. Однако в меню загрузки отображается только UEFI Shell, а
+`map -r` возвращает `Not Found`.
+Диагностика в шелле (`work-in-progress/uefi-pci-output`):
+- `pci` видит мост `00:1D.0` (Root Port #9), а также шины 01 (Nvidia) и 02 (Wi-Fi),
+  но шина 03 (NVMe) отсутствует.
+- `pci 00 1d 00`: мост сконфигурирован (SecBus=03, SubBus=03), `PresDet=1`
+  (SSD физически в слоте), но Link Status = `0x5041` (бит 13 `DLActive=0`,
+  физический PCIe-линк отключен).
+- `pci 03 00 00`: возвращает все `0xFF` (Master Abort).
+Причина: при начальном сканировании в ramstage SSD был обнаружен (`00:03:00.0 [1c5c/1527]`),
+но последующее включение `PCIEXP_L1_SUB_STATE` (L1.1 / L1.2) и `PcieRpClkReqSupport[8]`
+привело к уходу контроллера SK Hynix BC501 в глубокий сон L1.2 без тактирования,
+из которого он не пробуждается. На заводском BIOS Xiaomi субсостояния L1 были отключены
+(`L1SubCtl1: ASPM_L1.2- ASPM_L1.1-`).
+
+### g9: отключение PCIe L1 Substates и Clock PM для восстановления линка NVMe
+
+Для предотвращения падения линка PCIe NVMe SSD при передаче управления в payload.
+
+Изменения:
+- В `src/mainboard/xiaomi/tm1703/devicetree.cb` параметр `PcieRpClkReqSupport[8]`
+  переведён в `false` (аналогично GPU и Wi-Fi).
+- В `src/mainboard/xiaomi/tm1703/Kconfig` добавлены `config PCIEXP_L1_SUB_STATE default n`
+  и `config PCIEXP_CLK_PM default n`.
+- В `.config` отключены `CONFIG_PCIEXP_L1_SUB_STATE` и `CONFIG_PCIEXP_CLK_PM`
+  (базовый `CONFIG_PCIEXP_ASPM=y` сохранён).
+- `CONFIG_LOCALVERSION` обновлен до `g9`.
+
+Ожидаемый результат: сохранение активности PCIe-линка NVMe (`DLActive=1`),
+успешная регистрация блочного устройства EDK2 NvmExpressDxe, монтирование ESP-раздела
+(`fs0:`) и появление установленной ОС в меню загрузки.
 
 ## Условный roadmap
 

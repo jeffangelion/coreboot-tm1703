@@ -61,6 +61,13 @@ config MRC_SETTINGS_PROTECT
 config PAYLOAD_FILE
 	default "payloads/coreinfo/build/coreinfo.elf" if PAYLOAD_ELF
 
+# Setting this breaks SK Hynix NVMe SSD link
+config PCIEXP_L1_SUB_STATE
+	default n
+
+config PCIEXP_CLK_PM
+	default n
+
 # This platform has limited means to display POST codes
 config NO_POST
 	default y

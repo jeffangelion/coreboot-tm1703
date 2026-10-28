@@ -61,7 +61,7 @@ chip soc/intel/skylake
 		end
 		device ref pcie_rp9 on
 			# M.2 NVMe SSD, PCIe x4.
-			register "PcieRpClkReqSupport[8]" = "true"
+			register "PcieRpClkReqSupport[8]" = "false"
 			register "PcieRpClkReqNumber[8]" = "1"
 			register "PcieRpClkSrcNumber[8]" = "5"
 		end
