@@ -1,18 +1,22 @@
-# TM1703: локальное получение закрытых компонентов
+# TM1703: локальное получение firmware-компонентов
 
-IFD, Intel ME, EC и VBT являются закрытыми компонентами заводской прошивки.
-Они не добавляются в Git и должны быть извлечены пользователем из собственного
-16-MiB дампа SPI-флешки TM1703.
+IFD, Intel ME и EC являются закрытыми компонентами заводской прошивки. Они не
+добавляются в Git и должны быть извлечены пользователем из собственного 16-MiB
+дампа SPI-флешки TM1703. VBT является разрешённым board-specific data-файлом и
+поставляется в `src/mainboard/xiaomi/tm1703/data.vbt`.
 
 ## Подготовка
 
 Все команды выполняются из корня дерева coreboot. Укажите путь к своему дампу:
 
 ```sh
-tm1703_dump=/path/to/tm1703-16mib.bin
+tm1703_coreboot_dir=$PWD
+tm1703_dump=$(realpath /path/to/tm1703-16mib.bin)
 test "$(stat -c %s "$tm1703_dump")" -eq 16777216
 tm1703_blob_dir=3rdparty/blobs/mainboard/xiaomi/tm1703
+tm1703_extract_dir=$(mktemp -d)
 mkdir -p "$tm1703_blob_dir"
+make -C util/ifdtool
 ```
 
 Используйте только собственный проверенный дамп, несколько раз одинаково
@@ -29,13 +33,22 @@ ME   0x001000..0x8fffff  0x8ff000 bytes
 EC   0x900000..0x93ffff  0x040000 bytes
 ```
 
-Извлечение:
+IFD и ME извлекаются штатным `ifdtool`, который получает их границы из самого
+дескриптора:
 
 ```sh
-dd if="$tm1703_dump" of="$tm1703_blob_dir/descriptor.bin" \
-  bs=1 skip=$((0x000000)) count=$((0x001000)) status=none
-dd if="$tm1703_dump" of="$tm1703_blob_dir/me.bin" \
-  bs=1 skip=$((0x001000)) count=$((0x8ff000)) status=none
+(cd "$tm1703_extract_dir" && \
+  "$tm1703_coreboot_dir/util/ifdtool/ifdtool" -x -p sklkbl "$tm1703_dump")
+install -m 0644 "$tm1703_extract_dir/flashregion_0_flashdescriptor.bin" \
+  "$tm1703_blob_dir/descriptor.bin"
+install -m 0644 "$tm1703_extract_dir/flashregion_2_intel_me.bin" \
+  "$tm1703_blob_dir/me.bin"
+```
+
+EC занимает board-specific диапазон, который не описан как EC-регион IFD,
+поэтому для него остаётся отдельное извлечение:
+
+```sh
 dd if="$tm1703_dump" of="$tm1703_blob_dir/ec.bin" \
   bs=1 skip=$((0x900000)) count=$((0x040000)) status=none
 ```
@@ -54,32 +67,25 @@ ME-регион внешнего runtime-дампа может отличать�
 
 ## VBT
 
-В проверенном заводском образе используемый VBT начинается с `$VBT` по
-смещению `0xf9888c` и имеет размер 4441 байт. Сначала убедитесь, что сигнатура
-найдена в ожидаемом месте:
-
-```sh
-grep -obUa '\$VBT' "$tm1703_dump"
-dd if="$tm1703_dump" of="$tm1703_blob_dir/vbt.bin" \
-  bs=1 skip=$((0xf9888c)) count=4441 status=none
-sha256sum "$tm1703_blob_dir/vbt.bin"
-```
-
-Ожидаемый SHA-256:
+Для сборки используется поставляемый с платой файл
+`src/mainboard/xiaomi/tm1703/data.vbt`. Его ожидаемый SHA-256:
 
 ```text
 7aebcc9be9956903ff57e80c18cbff99866975d3e41c0debbe5807a9473eb0f5
 ```
 
-Дополнительная проверка структуры:
+Структуру можно проверить штатным `intelvbttool`:
 
 ```sh
-intel_vbt_decode --file "$tm1703_blob_dir/vbt.bin"
+make -C util/intelvbttool
+util/intelvbttool/intelvbttool \
+  --invbt src/mainboard/xiaomi/tm1703/data.vbt --outdump
 ```
 
-Если сигнатур несколько, смещение или размер отличаются, не выбирайте VBT
-автоматически: сначала сравните панель и результат декодирования с live VBT
-своей работающей системы.
+Если исходником является Intel Option ROM, `intelvbttool --inoprom ...
+--outvbt ...` извлекает из него raw VBT. Для сравнения с реально используемой
+конфигурацией можно также снять live VBT из debugfs работающей стоковой системы.
+Не подменяйте поставляемый файл VBT от другой платы или варианта панели.
 
 ## Проверка перед сборкой
 
@@ -88,13 +94,14 @@ stat -c '%s %n' \
   "$tm1703_blob_dir/descriptor.bin" \
   "$tm1703_blob_dir/me.bin" \
   "$tm1703_blob_dir/ec.bin" \
-  "$tm1703_blob_dir/vbt.bin"
+  src/mainboard/xiaomi/tm1703/data.vbt
 sha256sum \
   "$tm1703_blob_dir/descriptor.bin" \
   "$tm1703_blob_dir/me.bin" \
   "$tm1703_blob_dir/ec.bin" \
-  "$tm1703_blob_dir/vbt.bin"
+  src/mainboard/xiaomi/tm1703/data.vbt
 ```
 
-Ожидаемые размеры: 4096, 9433088, 262144 и 4441 байт соответственно. Файлы
-остаются локальными и незатреканными внутри `3rdparty/blobs`.
+Ожидаемые размеры: 4096, 9433088, 262144 и 4441 байт соответственно. IFD, ME
+и EC остаются локальными и незатреканными внутри `3rdparty/blobs`; VBT
+отслеживается вместе с исходниками платы.
