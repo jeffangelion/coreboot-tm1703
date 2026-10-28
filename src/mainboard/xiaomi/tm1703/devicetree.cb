@@ -11,6 +11,10 @@ chip soc/intel/skylake
 	register "PmConfigSlpSusMinAssert" = "3"
 	register "PmConfigSlpAMinAssert" = "3"
 
+	register "SerialIoDevMode" = "{
+		[PchSerialIoIndexI2C1] = PchSerialIoPci,
+	}"
+
 	device domain 0 on
 		device ref igpu on
 			register "gfx" = "GMA_STATIC_DISPLAYS(0)"
