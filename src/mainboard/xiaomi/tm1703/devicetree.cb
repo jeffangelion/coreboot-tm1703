@@ -30,7 +30,21 @@ chip soc/intel/skylake
 		end
 		device ref sa_thermal on end
 		device ref thermal on end
-		device ref south_xhci on end
+		device ref south_xhci on
+			register "usb2_ports" = "{
+				[0] = USB2_PORT_MID(OC_SKIP),		/* Type-A port right */
+				[2] = USB2_PORT_TYPE_C(OC_SKIP),	/* Type-C port */
+				[3] = USB2_PORT_MID(OC_SKIP),		/* Type-A port left */
+				[4] = USB2_PORT_FLEX(OC_SKIP),		/* XiaoMi USB 2.0 Webcam */
+				[5] = USB2_PORT_FLEX(OC_SKIP),		/* ELAN Fingerprint */
+				[6] = USB2_PORT_FLEX(OC_SKIP),		/* Intel Bluetooth 8265 */
+			}"
+			register "usb3_ports" = "{
+				[0] = USB3_PORT_DEFAULT(OC_SKIP),	/* Type-A port right */
+				[2] = USB3_PORT_DEFAULT(OC_SKIP),	/* Type-C port */
+				[3] = USB3_PORT_DEFAULT(OC_SKIP),	/* Type-A port left */
+			}"
+		end
 		device ref heci1 on end
 		device ref sata on end
 		device ref hda on end

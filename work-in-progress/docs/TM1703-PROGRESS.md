@@ -61,7 +61,10 @@
   установленный Debian Linux (6.12.111). Тачпад ELAN2301 на I2C1 успешно
   определился в системе (`hid-multitouch` / `i2c_hid`), устройства ввода созданы,
   прерывания IRQ 51 приходят.
-- Текущая глобальная цель — эпоха `g`, продолжение настройки периферии (тачпад, Type-C / UCSI, GPIO-таблица, звук, батарея).
+- g10: конфигурирование USB 2.0 и USB 3.0 портов PCH xHCI в `devicetree.cb`
+  (Type-A левый/правый, Type-C, веб-камера XiaoMi, сканер отпечатков ELAN,
+  Bluetooth Intel 8265).
+- Текущая глобальная цель — эпоха `g`, продолжение настройки периферии (USB, Type-C / UCSI, подсветка дисплея, батарея, S3 sleep).
 
 Ранние разделы ниже сохранены как журнал гипотез и экспериментов; их промежуточные
 формулировки не следует читать как актуальное состояние порта без этой сводки.
@@ -1146,6 +1149,38 @@ UEFI Shell доступны. Однако в меню загрузки отоб�
   поверх `i2c_designware.1`, созданы устройства `/dev/input/event2` (Mouse) и
   `/dev/input/event3` (Touchpad). Прерывания по линии IRQ 51 (`GPP_B3_IRQ`)
   исправно поступают в ядро.
+
+### g10: конфигурирование портов USB 2.0 и USB 3.0 в devicetree.cb
+
+Для инициализации физических USB-портов xHCI в PCH через FSP-S.
+
+Причина:
+В silicon init (`src/soc/intel/skylake/chip.c`) FSP-S принимает битовые маски и
+настройки портов `params->PortUsb20Enable[i]` и `params->PortUsb30Enable[i]`.
+При пустом блоке `device ref south_xhci on end` все порты по умолчанию
+оставались со значением `.enable = 0`, и FSP-S физически отключал все 10 USB 2.0
+и 6 USB 3.0 портов PCH. В Linux корневой концентратор `xhci_hcd` не видел
+подключенных устройств.
+
+Топология USB TM1703 (на основе OEM dmesg и ACPI _UPC в SSDT6):
+- USB2 Port 1 (индекс `[0]`): Type-A правый (`USB2_PORT_MID(OC_SKIP)`)
+- USB2 Port 3 (индекс `[2]`): Type-C (`USB2_PORT_TYPE_C(OC_SKIP)`)
+- USB2 Port 4 (индекс `[3]`): Type-A левый (`USB2_PORT_MID(OC_SKIP)`)
+- USB2 Port 5 (индекс `[4]`): SunplusIT XiaoMi USB 2.0 Webcam `05c8:03a2` (`USB2_PORT_FLEX(OC_SKIP)`)
+- USB2 Port 6 (индекс `[5]`): ELAN Fingerprint `04f3:0c1a` (`USB2_PORT_FLEX(OC_SKIP)`)
+- USB2 Port 7 (индекс `[6]`): Intel Bluetooth 8265 `8087:0a2b` (`USB2_PORT_FLEX(OC_SKIP)`)
+- USB3 Port 1 (индекс `[0]`): Type-A правый SuperSpeed (`USB3_PORT_DEFAULT(OC_SKIP)`)
+- USB3 Port 3 (индекс `[2]`): Type-C SuperSpeed (`USB3_PORT_DEFAULT(OC_SKIP)`)
+- USB3 Port 4 (индекс `[3]`): Type-A левый SuperSpeed (`USB3_PORT_DEFAULT(OC_SKIP)`)
+
+Изменения:
+- В `src/mainboard/xiaomi/tm1703/devicetree.cb` под `device ref south_xhci on`
+  заполнены массивы `usb2_ports` и `usb3_ports`.
+- `CONFIG_LOCALVERSION` обновлен до `g10`.
+
+Ожидаемый результат:
+- Обнаружение веб-камеры, сканера отпечатков пальцев и Bluetooth-модуля при загрузке.
+- Работоспособность внешних флеш-накопителей в разъёмах Type-A и Type-C.
 
 ## Условный roadmap
 
