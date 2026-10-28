@@ -25,7 +25,7 @@ config VGA_BIOS_ID
 	default "8086,5917"
 
 config INTEL_GMA_VBT_FILE
-	default "3rdparty/blobs/mainboard/\$(MAINBOARDDIR)/vbt.bin"
+	default "src/mainboard/\$(MAINBOARDDIR)/data.vbt"
 
 config FMDFILE
 	default "src/mainboard/xiaomi/tm1703/board.fmd"
