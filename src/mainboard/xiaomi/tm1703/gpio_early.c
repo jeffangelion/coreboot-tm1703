@@ -10,6 +10,11 @@ static const struct pad_config early_gpio_table[] = {
 	PAD_CFG_GPI(GPP_D2, NONE, DEEP),
 	PAD_CFG_GPI(GPP_D3, NONE, DEEP),
 
+	/* M.2 SATA/PCIe mode detection must be configured before FSP-M. */
+	PAD_CFG_NF(GPP_E0, NONE, DEEP, NF1),
+	PAD_CFG_NF(GPP_E1, NONE, DEEP, NF1),
+	PAD_CFG_NF(GPP_E2, NONE, DEEP, NF1),
+
 	/* Keep the dGPU in reset while enabling its power rail. */
 	PAD_CFG_GPO(GPP_G1, 0, PLTRST),	/* HLRS# */
 	PAD_CFG_GPO(GPP_G4, 0, PLTRST),	/* PWEN# */
