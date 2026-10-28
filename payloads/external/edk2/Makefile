@@ -292,11 +292,11 @@ $(EDK2_PATH): $(WORKSPACE)
 		if git status --ignore-submodules=dirty | grep -q -e clean -e "nothing added"; then \
 			echo "    Checking out $(project_name) revision $(CONFIG_EDK2_TAG_OR_REV)"; \
 			git checkout --detach $(CONFIG_EDK2_TAG_OR_REV) -f; \
-			git submodule update --checkout --recursive; \
+			git submodule update --checkout; \
 		else \
 			echo "    Working directory not clean; will not overwrite"; \
 		fi; \
-		git submodule update --init --checkout --recursive
+		git submodule update --init --checkout
 
 logo: $(EDK2_PATH)
 	case "$(CONFIG_EDK2_BOOTSPLASH_FILE)" in \
