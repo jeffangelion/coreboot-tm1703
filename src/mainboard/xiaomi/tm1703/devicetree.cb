@@ -36,7 +36,17 @@ chip soc/intel/skylake
 		device ref hda on end
 		device ref smbus on end
 		device ref i2c0 on end
-		device ref i2c1 on end
+		device ref i2c1 on
+			chip drivers/i2c/hid
+				register "generic.hid" = ""ELAN2301""
+				register "generic.desc" = ""ELAN Touchpad""
+				register "generic.irq" = "ACPI_IRQ_WAKE_LEVEL_LOW(GPP_B3_IRQ)"
+				register "generic.name" = ""TPD0""
+				register "generic.detect" = "1"
+				register "hid_desc_reg_offset" = "0x01"
+				device i2c 0x15 on end
+			end
+		end
 		device ref fast_spi on end
 		device ref pcie_rp1 on
 			# NVIDIA GP108M discrete GPU, PCIe x4.

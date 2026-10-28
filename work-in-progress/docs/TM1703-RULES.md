@@ -22,7 +22,7 @@
   `work-in-progress/logs/<эпоха>NN.log`.
 - Коммиты, подготовленные с помощью AI, должны содержать честный trailer
   `Co-authored-by:`. Для текущего помощника используется
-  `Co-authored-by: Codex <noreply@openai.com>`.
+  `Co-authored-by: Gemini <gemini@google.com>`.
 
 ## Необходимые общие изменения
 
