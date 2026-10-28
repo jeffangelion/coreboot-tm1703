@@ -10,6 +10,7 @@ bootblock-y += gpio_early.c
 romstage-y += romstage.c
 romstage-y += spd/spd_util.c
 
+ramstage-y += gpio.c
 ramstage-y += ramstage.c
 ramstage-y += hda_verb.c
 

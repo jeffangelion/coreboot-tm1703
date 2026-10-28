@@ -1,16 +1,11 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 
-#ifndef MAINBOARD_GPIO_H
-#define MAINBOARD_GPIO_H
-
+#include <mainboard/gpio.h>
 #include <soc/gpio.h>
 
-#ifndef __ACPI__
-
 /*
- * These pins are configured before FSP SiliconInit().  Their native functions
- * and terminations were recovered from ProgramGPIOPei and verified against
- * the OEM GPIO register dump.
+ * These pins are configured before FSP SiliconInit(). Their native functions
+ * and terminations were verified against the OEM GPIO register dump.
  *
  * Panel power and backlight are controlled by the EC, not by PCH GPIO.
  */
@@ -24,6 +19,7 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_NF(GPP_E19, DN_20K, DEEP, NF1),
 };
 
-#endif
-
-#endif
+void mainboard_configure_gpios(void)
+{
+	gpio_configure_pads(gpio_table, ARRAY_SIZE(gpio_table));
+}

@@ -2,16 +2,15 @@
 
 #include <console/console.h>
 #include <gpio.h>
+#include <mainboard/gpio.h>
 #include <soc/ramstage.h>
-
-#include "gpio.h"
 
 void mainboard_silicon_init_params(FSP_SIL_UPD *params)
 {
 	const int dgpu_pwok = gpio_get(GPP_G3);
 
 	/* Configure board pads before FSP SiliconInit(). */
-	gpio_configure_pads(gpio_table, ARRAY_SIZE(gpio_table));
+	mainboard_configure_gpios();
 
 	printk(BIOS_INFO, "TM1703: dGPU PWOK (GPP_G3) = %d\n", dgpu_pwok);
 	if (!dgpu_pwok)
