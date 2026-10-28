@@ -38,7 +38,7 @@ chip soc/intel/skylake
 		end
 		device ref pcie_rp5 on
 			# Intel Wireless 8265, PCIe x1.
-			register "PcieRpClkReqSupport[4]" = "true"
+			register "PcieRpClkReqSupport[4]" = "false"
 			register "PcieRpClkReqNumber[4]" = "0"
 			register "PcieRpClkSrcNumber[4]" = "3"
 		end
