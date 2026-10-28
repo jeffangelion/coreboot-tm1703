@@ -59,7 +59,7 @@ config MRC_SETTINGS_PROTECT
 
 # Use coreinfo when an ELF payload is selected for early bring-up.
 config PAYLOAD_FILE
-	default "payloads/coreinfo/build/coreinfo.elf"
+	default "payloads/coreinfo/build/coreinfo.elf" if PAYLOAD_ELF
 
 # This platform has limited means to display POST codes
 config NO_POST
