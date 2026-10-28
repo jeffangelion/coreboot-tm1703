@@ -12,6 +12,7 @@ chip soc/intel/skylake
 	register "PmConfigSlpAMinAssert" = "3"
 
 	register "SerialIoDevMode" = "{
+		[PchSerialIoIndexI2C0] = PchSerialIoPci,
 		[PchSerialIoIndexI2C1] = PchSerialIoPci,
 	}"
 
@@ -34,6 +35,7 @@ chip soc/intel/skylake
 		device ref sata on end
 		device ref hda on end
 		device ref smbus on end
+		device ref i2c0 on end
 		device ref i2c1 on end
 		device ref fast_spi on end
 		device ref pcie_rp1 on
