@@ -1581,6 +1581,23 @@ SHA-256 `build/coreboot.rom`:
 84b00ef0a8c7604d979d0e5a734bb6bb0f529617d358abca12527391c73cb070
 ```
 
+### g25: поддержка SMMSTORE, графического меню EDK2 на базе LVGL и Secure Boot
+
+Причина:
+Для поддержки современного UEFI Setup с поддержкой мыши/тачпада и работы UEFI Secure Boot полезная нагрузка EDK2 требует энергонезависимого хранилища переменных в SPI-flash (`SMMSTORE`) и включения графического движка `LvglDisplayEngineDxe`.
+
+Выполненные изменения:
+1. В `src/mainboard/xiaomi/tm1703/Kconfig` включен `SMMSTORE` с размером `0x40000` (соответствует FMAP-региону `SMMSTORE` 256K в `board.fmd`).
+2. В EDK2 инициализирован субмодуль `LvglPkg` с библиотекой `lvgl`.
+3. Включен графический рендерер Setup: `CONFIG_EDK2_USE_LVGL_RENDERER=y`.
+4. Включена поддержка Secure Boot: `CONFIG_EDK2_SECURE_BOOT_SUPPORT=y` и `CONFIG_EDK2_SECURE_BOOT_DEFAULT_ENABLE=y`.
+- `CONFIG_LOCALVERSION` обновлен до `g25`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+67b89b0fd4d0cd50e68aa69aca7adf879f65d3bb1a28aea722786f2f7bbf3ea9
+```
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
