@@ -20,7 +20,7 @@ DefinitionBlock(
 	{
 		#include <soc/intel/skylake/acpi/systemagent.asl>
 		#include <soc/intel/skylake/acpi/pch.asl>
-		#include <drivers/intel/gma/acpi/default_brightness_levels.asl>
+		#include "acpi/backlight.asl"
 	}
 
 	#include <southbridge/intel/common/acpi/sleepstates.asl>

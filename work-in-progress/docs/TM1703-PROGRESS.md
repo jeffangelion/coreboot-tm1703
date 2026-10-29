@@ -72,11 +72,14 @@
   микрокод `ibt-12-16.sfi`/`.ddc`, создан рабочий интерфейс `hci0` (`Powered: yes`).
   Все USB-порты и внутренние устройства ноутбука (веб-камера, сканер, тачпад, BT, Type-A, Type-C)
   полностью функциональны.
-- g12: подключение `drivers/intel/gma/acpi/default_brightness_levels.asl` в `dsdt.asl`
-  для объявления методов управления подсветкой (`XBCL`, `XBCM`, `XBQC`, `_DOS`, `BRIG`),
-  устраняющее `Could not resolve symbol [^^XBCL], AE_NOT_FOUND` и регистрирующее
-  интерфейс подсветки дисплея в ОС.
-- Текущая глобальная цель — эпоха `g`, продолжение настройки периферии (подсветка дисплея, Type-C / UCSI, S3 sleep).
+- g12: подключение `drivers/intel/gma/acpi/default_brightness_levels.asl`
+  для объявления методов управления подсветкой (`XBCL`, `XBCM`, `XBQC`, `_DOS`, `BRIG`).
+  Результат подтверждён на железе: создано устройство `/sys/class/backlight/acpi_video0`,
+  проверено управление яркостью через sysfs.
+- g13: рефакторинг ACPI подсветки (включение через `acpi/backlight.asl`), отключение
+  `select CONSOLE_SPI_FLASH` в `Kconfig` и `CONFIG_CONSOLE_SPI_FLASH` в конфиге
+  для снижения износа SPI flash и ускорения загрузки (логи сохраняются в RAM через CBMEM).
+- Текущая глобальная цель — эпоха `g`, продолжение настройки периферии (Type-C / UCSI, S3 sleep, hotkeys).
 
 Ранние разделы ниже сохранены как журнал гипотез и экспериментов; их промежуточные
 формулировки не следует читать как актуальное состояние порта без этой сводки.
@@ -1262,6 +1265,32 @@ USB-интерфейс адаптера Intel 8265 аппаратно обест
 - Ошибки `AE_NOT_FOUND` и `[Firmware Bug]: ACPI(GFX0) defines _DOD but not _DOS` полностью устранены.
 - В `/sys/class/backlight/acpi_video0` зарегистрировано устройство управления подсветкой (тип `firmware`, 100 уровней).
 - Проверена установка и чтение уровней яркости через sysfs (`brightness` / `actual_brightness`).
+
+### g13: рефакторинг backlight.asl и отключение flashconsole
+
+Для оптимизации архитектуры ACPI и устранения износа SPI flash при загрузке.
+
+Причина:
+1. Заглушка `acpi/backlight.asl` оставалась неиспользованной со времён начального скелета.
+   Для соблюдения модульной структуры coreboot подключение `default_brightness_levels.asl`
+   вынесено в `acpi/backlight.asl`, а сам файл подключен в `dsdt.asl`.
+2. После успешного перехода на стабильную загрузку Linux отпала необходимость
+   записи логов во флеш-чип (`CONSOLE_SPI_FLASH`), которая приводила к стиранию/записи
+   до 1.5 МиБ данных на SPI-память при каждом включении и добавляла 1–2 секунды задержки
+   при старте. Все отладочные сообщения в полном объёме сохраняются в оперативной
+   памяти (`CONFIG_CONSOLE_CBMEM=y`) и читаются через `sudo cbmem -c`.
+
+Изменения:
+- В `src/mainboard/xiaomi/tm1703/acpi/backlight.asl` добавлен `#include <drivers/intel/gma/acpi/default_brightness_levels.asl>`.
+- В `src/mainboard/xiaomi/tm1703/dsdt.asl` заменено прямое подключение на `#include "acpi/backlight.asl"`.
+- В `src/mainboard/xiaomi/tm1703/Kconfig` удалён `select CONSOLE_SPI_FLASH`.
+- В `.config` отключен `CONFIG_CONSOLE_SPI_FLASH`.
+- `CONFIG_LOCALVERSION` обновлен до `g13`.
+
+Ожидаемый результат:
+- Ускорение начальной загрузки за счёт отсутствия операций стирания/записи SPI.
+- Отсутствие фонового износа SPI flash.
+- Сохранение полной работоспособности подсветки и логов `cbmem`.
 
 ## Условный roadmap
 
