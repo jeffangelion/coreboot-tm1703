@@ -29,6 +29,7 @@ void mainboard_silicon_init_params(FSP_SIL_UPD *params)
 static void mainboard_fill_ssdt(const struct device *dev)
 {
 	const size_t ucsi_alloc_len = 0x1000;
+	const size_t ucsi_reg_len = 0x30;
 	void *region_ptr = cbmem_add(CBMEM_ID_ACPI_UCSI, ucsi_alloc_len);
 
 	if (!region_ptr) {
@@ -37,11 +38,34 @@ static void mainboard_fill_ssdt(const struct device *dev)
 	}
 	memset(region_ptr, 0, ucsi_alloc_len);
 
+	struct opregion opreg = {
+		.name = "USBC",
+		.regionspace = SYSTEMMEMORY,
+		.regionoffset = (uintptr_t)region_ptr,
+		.regionlen = ucsi_reg_len,
+	};
+	static struct fieldlist ucsi_region_fields[] = {
+		FIELDLIST_NAMESTR("VERS", 16),
+		FIELDLIST_OFFSET(4),
+		FIELDLIST_NAMESTR("CCI", 32),
+		FIELDLIST_NAMESTR("CTRL", 64),
+		FIELDLIST_NAMESTR("MSGI", 128),
+		FIELDLIST_NAMESTR("MSGO", 128),
+	};
+
 	acpigen_write_scope("\\");
 	acpigen_write_name_dword("UCBA", (uintptr_t)region_ptr);
 	acpigen_write_scope_end();
 
-	printk(BIOS_INFO, "TM1703: UCSI mailbox at %p, emitted \\UCBA\n", region_ptr);
+	acpigen_write_scope("\\_SB.UBTC");
+	acpigen_write_opregion(&opreg);
+	acpigen_write_field(opreg.name, ucsi_region_fields,
+			    ARRAY_SIZE(ucsi_region_fields),
+			    FIELD_BYTEACC | FIELD_LOCK | FIELD_PRESERVE);
+	acpigen_write_scope_end();
+
+	printk(BIOS_INFO, "TM1703: UCSI mailbox at %p, emitted \\UCBA and USBC opregion\n",
+	       region_ptr);
 }
 
 static void mainboard_enable(struct device *dev)
