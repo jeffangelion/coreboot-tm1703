@@ -1258,6 +1258,11 @@ USB-интерфейс адаптера Intel 8265 аппаратно обест
 - Появление устройства управления подсветкой (`acpi_video0` или `intel_backlight`)
   в `/sys/class/backlight/` и работоспособность регулировки яркости в ОС.
 
+Результат: успешно подтверждено на железе (`work-in-progress/logs/g12.log`).
+- Ошибки `AE_NOT_FOUND` и `[Firmware Bug]: ACPI(GFX0) defines _DOD but not _DOS` полностью устранены.
+- В `/sys/class/backlight/acpi_video0` зарегистрировано устройство управления подсветкой (тип `firmware`, 100 уровней).
+- Проверена установка и чтение уровней яркости через sysfs (`brightness` / `actual_brightness`).
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
