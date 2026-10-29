@@ -1329,6 +1329,27 @@ SHA-256 `build/coreboot.rom`:
 19708be20ce559cbaa00a65c5da9b2f3f0632e7a96dba55e74deed0239c94585
 ```
 
+Тестирование g14 на железе показало:
+1. Окно MMIO `0xfe800000` полностью оживило аппаратные регистры EC. Телеметрия батареи переключилась с фиктивных 65535 мВ на реальные данные: статус зарядки, напряжение 8.27 В, мощность 2.59 Вт, 67% заряда.
+2. Аппаратный UCSI контроллер в EC (`0xfe801010`) активен и возвращает версию `0x0100` (UCSI 1.0).
+3. Драйвер ядра `ucsi_acpi` обнаружил `USBC000:00`, но завершил probe с ошибкой `-ENODEV (missing memory resource)`. Причина: `_CRS` был сгенерирован как статический объект в отдельной SSDT-таблице, в результате чего платформа Linux создала `platform_device` с `num_resources = 0`.
+
+### g15: динамический Method (_CRS) в UBTC и экспорт \UCBA в SSDT
+
+Для корректной инициализации ресурсов драйвера `ucsi_acpi`:
+- В `src/mainboard/xiaomi/tm1703/acpi/ucsi.asl`:
+  - В устройство `UBTC` добавлен шаблон `Name (CRS, ResourceTemplate() { Memory32Fixed(ReadWrite, 0, 0x1000, _Y01) })`.
+  - Добавлен метод `Method (_CRS, 0, Serialized)`, который патчит базовый адрес `_BAS` значением `\UCBA` и возвращает шаблон ресурсов ядра Linux (по аналогии с OEM SSDT6).
+  - Объявлен `OperationRegion (USBC, SystemMemory, \UCBA, 0x30)` с полями mailbox прямо в ASL.
+- В `src/mainboard/xiaomi/tm1703/ramstage.c`:
+  - `mainboard_fill_ssdt()` упрощен: аллоцирует CBMEM буфер UCSI и экспортирует целочисленный объект `\UCBA` в корневой scope `\`.
+- `CONFIG_LOCALVERSION` обновлен до `g15`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+3309f2e39f882d10d982cc774e9d0ca6f7b7b77ac8aa5e2c7d3db1974e770dda
+```
+
 Статус: образ готов к прошивке на программаторе T48.
 
 ## Условный roadmap
