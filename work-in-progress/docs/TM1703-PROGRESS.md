@@ -1297,6 +1297,40 @@ USB-интерфейс адаптера Intel 8265 аппаратно обест
 - `flashconsole` полностью отключена, износ SPI остановлен, время вывода консоли упало до 8 мс.
 - Полный лог coreboot сохраняется в ОЗУ и доступен через `sudo cbmem -c`.
 
+### g14: UCSI Type-C controller and LPC MMIO window
+
+Цели:
+1. Завести контроллер USB Type-C / UCSI (`\_SB.UBTC`), чтобы ядро Linux загружало драйвер `ucsi_acpi` и создавало интерфейс управления портом Type-C (`/sys/class/typec/port0`).
+2. Открыть 64 KiB MMIO окно LPC на адресе `0xfe800000` (`lpc_open_mmio_window`), необходимое для декодирования регистров EC MMIO:
+   - `0xfe801010` — регистры UCSI (`VERS`, `CCI`, `CTRL`, `MSGI`, `MSGO`)
+   - `0xfe802000` / `0xfe802080` — регистры статуса батареи и питания (`ECMB`, `BATR`).
+
+Изменения:
+- В `src/mainboard/xiaomi/tm1703/bootblock.c` вызван `lpc_open_mmio_window(0xfe800000, 0x10000)`. Это конфигурирует PCH LPC Generic Memory Range (LGMR) и PCR GPMR зеркалирование на самом раннем этапе bootblock.
+- В `src/mainboard/xiaomi/tm1703/acpi/ec.asl`:
+  - Объявлены `OperationRegion (RAM, EmbeddedControl, 0, 0xff)` с `CMDB`, `CMD0`.
+  - Объявлены `OperationRegion (USMB, SystemMemory, 0xfe801010, 0x30)` с полями UCSI (`VERS`, `CCI`, `CTRL`, `MSGI`, `MSGO`).
+  - Реализован query method `_Q79`, обрабатывающий SCI-прерывание EC по событию Type-C, копирующий `MSGI`/`CCI` в mailbox и отправляющий `Notify (\_SB.UBTC, 0x80)`.
+- Создан `src/mainboard/xiaomi/tm1703/acpi/ucsi.asl`:
+  - Устройство `\_SB.UBTC` (`_HID: USBC000`, `_CID: PNP0CA0`).
+  - Стандартный UCSI `_DSM` (UUID `6f8398c2-7ca4-11e4-ad36-631042b5008f`):
+    - Function 0: чтение/инициализация версии UCSI из EC.
+    - Function 1: запись `MSGO`/`CTRL` в EC и выполнение команды через `CMD0 = 0x80`, `CMDB = 0xe0`.
+    - Function 2: чтение `MSGI`/`CCI` из EC.
+  - Дочернее устройство `CR01` с описателем физического расположения разъёма Type-C (`_PLD`).
+- В `src/mainboard/xiaomi/tm1703/dsdt.asl` подключен `acpi/ucsi.asl`.
+- В `src/mainboard/xiaomi/tm1703/ramstage.c`:
+  - Добавлены `mainboard_ops` с callback `acpi_fill_ssdt`.
+  - `mainboard_fill_ssdt()` динамически выделяет 4 KiB памяти в CBMEM (`CBMEM_ID_ACPI_UCSI`) и генерирует `_CRS` и `OperationRegion (USBC)` для `\_SB.UBTC`.
+- `CONFIG_LOCALVERSION` обновлен до `g14`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+19708be20ce559cbaa00a65c5da9b2f3f0632e7a96dba55e74deed0239c94585
+```
+
+Статус: образ готов к прошивке на программаторе T48.
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
