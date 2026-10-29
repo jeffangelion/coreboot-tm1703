@@ -1598,6 +1598,37 @@ SHA-256 `build/coreboot.rom`:
 67b89b0fd4d0cd50e68aa69aca7adf879f65d3bb1a28aea722786f2f7bbf3ea9
 ```
 
+### g26: поддержка таблицы параметров CMOS (USE_OPTION_TABLE, cmos.layout, cmos.default)
+
+Причина:
+Для управления аппаратными функциями процессора и платформы (HyperThreading, VT-d, поведение питания после сбоя `power_on_after_fail`, уровень отладочного вывода `debug_level`) без необходимости пересборки прошивки, а также для поддержки настройки через утилиту `nvramtool` в Linux.
+
+Выполненные изменения:
+1. Заполнен `src/mainboard/xiaomi/tm1703/cmos.layout` со стандартным распределением битов RTC NVRAM:
+   - `boot_option` (бит 384, 1 бит);
+   - `reboot_counter` (бит 388, 4 бита);
+   - `debug_level` (бит 395, 4 бита);
+   - `hyper_threading` (бит 400, 1 бит);
+   - `vtd` (бит 402, 1 бит);
+   - `power_on_after_fail` (бит 408, 2 бита);
+   - `check_sum` (бит 984, 16 бит);
+   - диапазон контрольной суммы: `checksum 392 415 984`.
+2. Создан `src/mainboard/xiaomi/tm1703/cmos.default` с безопасными дефолтными значениями:
+   - `boot_option=Fallback`
+   - `debug_level=Debug`
+   - `hyper_threading=Enable`
+   - `vtd=Enable`
+   - `power_on_after_fail=Disable`
+3. В `src/mainboard/xiaomi/tm1703/Kconfig` добавлены `select HAVE_OPTION_TABLE` и `select HAVE_CMOS_DEFAULT`.
+4. Включен бэкенд параметров `CONFIG_USE_OPTION_TABLE=y`.
+5. Сборка упаковывает `cmos_layout.bin` и `cmos.default` в образ CBFS.
+- `CONFIG_LOCALVERSION` обновлен до `g26`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+e2316e92fe66051af6bfa6fa525b6a55c172334caedaea96ef6e15ff1cfc7a66
+```
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
@@ -1628,9 +1659,9 @@ SHA-256 `build/coreboot.rom`:
 1. Изменить раскладку функционального ряда: сделать F1--F12 клавишами по
    умолчанию, а вспомогательные функции вызывать через Fn. Вероятно, это
    потребует патча прошивки EC и потому не относится к завершению coreboot-порта.
-2. Добавить поддержку CMOS-настроек (`cmos.layout`, `cmos.default`):
-   переключение HyperThreading, состояние питания после сбоя (`power_on_after_fail`)
-   и сохранение параметров через `nvramtool` и Coreboot Form Representation (CFR).
+2. [Выполнено в g26] Добавить поддержку CMOS-настроек (`cmos.layout`, `cmos.default`):
+   переключение HyperThreading, VT-d, состояние питания после сбоя (`power_on_after_fail`)
+   и сохранение/чтение параметров через `nvramtool`.
 3. Перенести дополнительные OEM ACPI-функции, не влияющие на базовую загрузку.
 4. Добавить расширенные диагностические возможности и более полный POST-log.
 5. Улучшить энергопотребление, тонкую настройку ASPM и дополнительные
