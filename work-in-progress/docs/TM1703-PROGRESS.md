@@ -1370,6 +1370,23 @@ SHA-256 `build/coreboot.rom`:
 ad8e5bc4ed5e2addbf888e059d779c9367e41efd6a1f60741befc88ed10c10e2
 ```
 
+Тестирование g16 на железе показало:
+1. Ошибки `AE_NOT_FOUND` и `-5` полностью устранены, память `7aa09000-7aa09fff : USBC000:00` успешно зарегистрирована, `_DSM` выполняется штатно.
+2. Трассировка ядра с помощью `ftrace` и `kprobe` выявила причину незавершения probe драйвера `ucsi_acpi`: функция `ucsi_acpi_read_version()` читает версию через `_DSM` Function 2 (чтение mailbox). В g16 Function 2 копировала только `MSGI` и `CCI`, а в памяти mailbox поле `VERS` оставалось нулевым (`0x0000`). Проверка `if (!version) return -ENODEV;` в `ucsi_register` отклоняла контроллер.
+
+### g17: предзаполнение версии UCSI и копирование VERS при чтении
+
+- В `src/mainboard/xiaomi/tm1703/ramstage.c`:
+  - В CBMEM буфер UCSI записывается начальное значение версии: `*(uint16_t *)region_ptr = 0x0100` (UCSI 1.0).
+- В `src/mainboard/xiaomi/tm1703/acpi/ucsi.asl`:
+  - В `_DSM` Case (2) (чтение mailbox) добавлена синхронизация версии из EC: `\_SB.UBTC.VERS = \_SB.PCI0.LPCB.EC0.VERS`.
+- `CONFIG_LOCALVERSION` обновлен до `g17`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+d33a969020524c74fcb8c7a739604a8ccd02a709b04c9edbc5b5217507ad1c8c
+```
+
 Статус: образ готов к прошивке на программаторе T48.
 
 ## Условный roadmap
