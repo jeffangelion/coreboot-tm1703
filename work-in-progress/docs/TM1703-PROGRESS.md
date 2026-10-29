@@ -72,7 +72,11 @@
   микрокод `ibt-12-16.sfi`/`.ddc`, создан рабочий интерфейс `hci0` (`Powered: yes`).
   Все USB-порты и внутренние устройства ноутбука (веб-камера, сканер, тачпад, BT, Type-A, Type-C)
   полностью функциональны.
-- Текущая глобальная цель — эпоха `g`, продолжение настройки периферии (подсветка дисплея, Type-C / UCSI, батарея, S3 sleep).
+- g12: подключение `drivers/intel/gma/acpi/default_brightness_levels.asl` в `dsdt.asl`
+  для объявления методов управления подсветкой (`XBCL`, `XBCM`, `XBQC`, `_DOS`, `BRIG`),
+  устраняющее `Could not resolve symbol [^^XBCL], AE_NOT_FOUND` и регистрирующее
+  интерфейс подсветки дисплея в ОС.
+- Текущая глобальная цель — эпоха `g`, продолжение настройки периферии (подсветка дисплея, Type-C / UCSI, S3 sleep).
 
 Ранние разделы ниже сохранены как журнал гипотез и экспериментов; их промежуточные
 формулировки не следует читать как актуальное состояние порта без этой сводки.
@@ -1229,6 +1233,30 @@ USB-интерфейс адаптера Intel 8265 аппаратно обест
 - Создан интерфейс `hci0` и rfkill-устройство `rfkill0`.
 - Служба BlueZ инициализировала контроллер: `Powered: yes`, `PowerState: on`, MAC `C0:B6:F9:5D:A4:BB`.
 - USB-подсистема ноутбука полностью введена в строй (USB2/3 Type-A, Type-C, веб-камера, сканер отпечатков, Bluetooth).
+
+### g12: подключение default_brightness_levels.asl для управления подсветкой
+
+Для устранения ошибки ACPI при инициализации `_BCL` и регистрации видеоустройства подсветки.
+
+Причина:
+В `g11` драйвер `i915` пропустил регистрацию нативной подсветки (`Skipping intel_backlight registration`),
+полагаясь на ACPI video backlight. Однако метод `\_SB.PCI0.GFX0.LCD0._BCL`, сгенерированный
+в динамическом SSDT (`drivers/intel/gma/acpi.c`), завершился ошибкой:
+`Could not resolve symbol [^^XBCL], AE_NOT_FOUND`
+из-за отсутствия реализации методов `XBCL`, `XBCM`, `XBQC` и `_DOS` в области `\_SB.PCI0.GFX0`.
+В результате в `/sys/class/backlight` не появилось ни одного устройства.
+
+Изменения:
+- В `src/mainboard/xiaomi/tm1703/dsdt.asl` под `Device (\_SB.PCI0)` подключен
+  `#include <drivers/intel/gma/acpi/default_brightness_levels.asl>`, предоставляющий
+  таблицу яркости `BRIG` (103 уровня), методы `XBCL`, `_DOS`, `DECB`/`INCB`,
+  а также OpRegion Mailbox 3 (`XBCM`/`XBQC` через ASLE IRQ).
+- `CONFIG_LOCALVERSION` обновлен до `g12`.
+
+Ожидаемый результат:
+- Устранение ошибок `AE_NOT_FOUND` в dmesg.
+- Появление устройства управления подсветкой (`acpi_video0` или `intel_backlight`)
+  в `/sys/class/backlight/` и работоспособность регулировки яркости в ОС.
 
 ## Условный roadmap
 
