@@ -143,6 +143,22 @@ Scope (\_SB.PCI0.LPCB)
 			Name (_HID, EisaId ("PNP0C0A"))
 			Name (_UID, Zero)
 			Name (BSTP, Package () { Zero, Zero, Zero, Zero })
+			Name (BIFP, Package ()
+			{
+				Zero,
+				Zero,
+				Zero,
+				One,
+				Zero,
+				Zero,
+				Zero,
+				One,
+				One,
+				"R13B02W",
+				"TM1703",
+				"LION",
+				"Xiaomi"
+			})
 
 			Method (_STA, 0, NotSerialized)
 			{
@@ -156,45 +172,106 @@ Scope (\_SB.PCI0.LPCB)
 
 			Method (_BIF, 0, NotSerialized)
 			{
-				Return (Package ()
+				Local0 = BSCM
+				BIFP [Zero] = (Local0 ^ One)
+				If (Local0)
 				{
-					Zero,
-					BSDC,
-					BSFC,
-					One,
-					BSDV,
-					BSPE,
-					BSPE,
-					One,
-					One,
-					"",
-					"TM1703",
-					"R13B02W",
-					"CPT-COS",
-					"Xiaomi"
-				})
+					Local1 = BSDC * 10
+					Local2 = BSFC * 10
+				}
+				Else
+				{
+					Local1 = BSDC
+					Local2 = BSFC
+				}
+
+				BIFP [One] = Local1
+				BIFP [0x02] = Local2
+				BIFP [0x04] = BSDV
+
+				/* Warning and low capacity thresholds */
+				Local6 = Local2 / 100
+				BIFP [0x05] = Local6 * 7
+				BIFP [0x06] = (Local6 * 11) / 2
+
+				Return (BIFP)
 			}
 
 			Method (_BST, 0, NotSerialized)
 			{
-				Local0 = Zero
 				If (NB0S & 0x02)
 				{
 					Local0 = 0x02
+					If (NB0S & 0x20)
+					{
+						Local0 = Zero
+					}
 				}
-				If (NB0S & 0x04)
+				ElseIf (NB0S & 0x04)
 				{
 					Local0 = One
 				}
+				Else
+				{
+					Local0 = Zero
+				}
+
 				If (NB0S & 0x10)
 				{
 					Local0 |= 0x04
 				}
 
+				If (NB0S & One)
+				{
+					Local1 = BSAC
+					Local2 = BSRC
+					If (MACS)
+					{
+						If (NB0S & 0x20)
+						{
+							Local2 = BSFC
+						}
+					}
+
+					If (BSCM)
+					{
+						Local2 *= 10
+					}
+
+					Local3 = BSVO
+					If (Local1 >= 0x8000)
+					{
+						If (Local0 & One)
+						{
+							Local1 = 0x10000 - Local1
+						}
+						Else
+						{
+							Local1 = Zero
+						}
+					}
+					ElseIf ((Local0 & 0x02) == Zero)
+					{
+						Local1 = Zero
+					}
+
+					If (BSCM)
+					{
+						Local1 = (Local1 * Local3) / 1000
+					}
+				}
+				Else
+				{
+					Local0 = Zero
+					Local1 = 0xffffffff
+					Local2 = 0xffffffff
+					Local3 = 0xffffffff
+				}
+
 				BSTP [Zero] = Local0
-				BSTP [One] = BSAC
-				BSTP [0x02] = BSRC
-				BSTP [0x03] = BSVO
+				BSTP [One] = Local1
+				BSTP [0x02] = Local2
+				BSTP [0x03] = Local3
 				Return (BSTP)
 			}
 		}
