@@ -17,6 +17,11 @@ ramstage-y += hda_verb.c
 ramstage-$(CONFIG_MAINBOARD_USE_LIBGFXINIT) += gma-mainboard.ads
 # ramstage-$(CONFIG_DRIVERS_OPTION_CFR_ENABLED) += cfr.c
 
+# NVIDIA GeForce MX150 (GP108M) VBIOS for ACPI _ROM method
+cbfs-files-y += pci10de,1d12.rom
+pci10de,1d12.rom-file := 3rdparty/blobs/mainboard/$(MAINBOARDDIR)/pci10de,1d12.rom
+pci10de,1d12.rom-type := optionrom
+
 # The TM1703 EC is stored outside the IFD EC region, at 0x900000.
 # Add it after the descriptor and ME have been stitched.
 TM1703_EC_FW := 3rdparty/blobs/mainboard/$(MAINBOARDDIR)/ec.bin
