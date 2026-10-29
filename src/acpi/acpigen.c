@@ -2153,8 +2153,8 @@ void acpigen_write_rom(void *bios, const size_t length)
 	/* Store (Local1, Local3) */
 	acpigen_write_store_ops(LOCAL1_OP, LOCAL3_OP);
 
-	/* If (LGreater (Local0, length)) */
-	acpigen_write_if_lgreater_op_int(LOCAL0_OP, length);
+	/* If (LGreater (Local0, length - 1)) */
+	acpigen_write_if_lgreater_op_int(LOCAL0_OP, length - 1);
 
 	/* Return(Buffer(Local1){0}) */
 	acpigen_emit_byte(RETURN_OP);
