@@ -1387,6 +1387,25 @@ SHA-256 `build/coreboot.rom`:
 d33a969020524c74fcb8c7a739604a8ccd02a709b04c9edbc5b5217507ad1c8c
 ```
 
+Тестирование g17 на железе показало:
+1. Драйвер `ucsi_acpi` успешно распознал контроллер, прочитал версию 1.0 (`0x0100`) и связался с устройством `USBC000:00`.
+2. Команда `PPM_RESET` (CTRL = 1) успешно принята EC, и аппаратные регистры EC зафиксировали завершение сброса: `0xfe801014 (CCI) = 0x08000000` (`Reset Completed Indicator`).
+3. Однако драйвер завершился с `PPM init failed: -ETIMEDOUT`: драйвер ожидает ACPI Notification от `_Q79`, который должен вызываться по прерыванию SCI (GPE 0x4F). В g17 прерывание SCI не генерировалось (`sci: 0`), поскольку пин EC SCI `GPP_E15` не был сконфигурирован в GPIO-таблице платы, а группы GPE0 не были зарегистрированы в `devicetree.cb`.
+
+### g18: маршрутизация GPE0 и конфигурация GPP_E15 как EC SCI
+
+- В `src/mainboard/xiaomi/tm1703/devicetree.cb`:
+  - Добавлена регистрация маршрутов групп GPE0 PCH: `gpe0_dw0 = "GPP_C"`, `gpe0_dw1 = "GPP_D"`, `gpe0_dw2 = "GPP_E"`. При этом группа `GPP_E` попадает в диапазон GPE0 64..95.
+- В `src/mainboard/xiaomi/tm1703/gpio.c`:
+  - Добавлен пин `GPP_E15`: `PAD_CFG_GPI_SCI_LOW(GPP_E15, NONE, DEEP, LEVEL)` (соответствует OEM дампу `0x05f8: 0x80880102`). Пин `GPP_E15` (64 + 15 = 79 = 0x4F) формирует аппаратное прерывание SCI для `_GPE = 0x4F` устройства `EC0`.
+  - Добавлен `PAD_NC(GPP_E16, NONE)`.
+- `CONFIG_LOCALVERSION` обновлен до `g18`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+245a688a6a8c446e6349595b3183ffae39ec2c33d9048fad433c0000586e6ef4
+```
+
 Статус: образ готов к прошивке на программаторе T48.
 
 ## Условный roadmap
