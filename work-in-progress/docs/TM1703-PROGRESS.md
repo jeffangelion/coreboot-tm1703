@@ -1406,7 +1406,35 @@ SHA-256 `build/coreboot.rom`:
 245a688a6a8c446e6349595b3183ffae39ec2c33d9048fad433c0000586e6ef4
 ```
 
-Статус: образ готов к прошивке на программаторе T48.
+Тестирование g18 на железе показало:
+1. Конфигурация пина `GPP_E15` подтверждена по pinctrl debugfs (`0x40880102` — SCI, active-low level, unasserted). Регистр `GPE0_EN` PMC (I/O `0x1899`) был активирован (`0x80`, бит GPE 0x4F).
+2. Тем не менее прерывание `gpe4F` оставалось на 0, а `ucsi_acpi` падал по таймауту. Чтение порта статуса EC `0x66` показало `0x00` (`SCI_EVT = 0`): EC физически не выставлял SCI для query event.
+3. Анализ OEM ACPI выявил причину: `Device (EC0)` не имел метода `_REG`. В OEM коде при подключении обработчика `EmbeddedControl` метод `_REG` устанавливает `\ECOK = 1`, `EQEN = 1` (разрешение генерации EC query events), `ETEE = 1` через `TINI()` (разрешение Type-C SCI событий в EC RAM) и `EOSS = 0x05` (уведомление EC о работе ОС). Без этого EC игнорировал события UCSI.
+
+### g19: метод EC _REG, инициализация Type-C SCI и полное оживление UCSI
+
+- В `src/mainboard/xiaomi/tm1703/acpi/ec.asl`:
+  - Объявлены поля EC RAM: `EQEN` (0x10.0), `ETEE` (0x10.1), `ECSS` (0x76.0-3), `EOSS` (0x76.4-7), `ETAF` (0x92), `\ECOK`.
+  - Добавлен метод `TINI()`: обнуляет `ETAF` и выставляет `ETEE = 1`.
+  - Добавлен `Method (_REG, 2)`: при регистрации OSPM `EmbeddedControl` (`Arg0 == 0x03, Arg1 == 1`) устанавливает `\ECOK = 1`, `EQEN = 1`, вызывает `TINI()` и передаёт `EOSS = 0x05`.
+- В `src/mainboard/xiaomi/tm1703/acpi/ucsi.asl`:
+  - В Case 1 `_DSM` отправка команды в EC обёрнута в `If (\ECOK)`.
+- `CONFIG_LOCALVERSION` обновлен до `g19`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+3fdd22d7a6ca31f3f8829323cb384733b4083dc8276a3b023b8817210f5fe0e4
+```
+
+Тестирование g19 на реальном железе:
+1. **Прерывания ACPI SCI и GPE4F заработали идеально:** счетчики `/sys/firmware/acpi/interrupts/sci` и `gpe4F` равны и стабильно растут при событиях (зафиксировано 266 прерываний).
+2. **Инициализация UCSI PPM завершилась успешно:** драйвер `ucsi_acpi` связался с `USBC000:00`, сбросил контроллер и завершил handshake без единой ошибки в dmesg.
+3. **Полноценно зарегистрирована подсистема Type-C ядра Linux:**
+   - Появился `/sys/class/typec/port0` (`data_role: [host] device`, `power_role: source [sink]`, `power_operation_mode: usb_power_delivery`, PD rev 2.0, Type-C rev 1.2).
+   - Зарегистрированы подключённые узлы: `/sys/class/typec/port0-cable`, `/sys/class/typec/port0-partner`, `port0-plug0`.
+4. **Power Supply & Battery:**
+   - Создано устройство питания `/sys/class/power_supply/ucsi-source-psy-USBC000:001` (`type: USB`, `usb_type: C [PD] PD_PPS`, `online: 1`).
+   - Батарея `BAT0` корректно сообщает статус `Charging`, зарядку через Type-C PD током до 4.1 A, ёмкость 98% и напряжение 8.805 В.
 
 ## Условный roadmap
 
