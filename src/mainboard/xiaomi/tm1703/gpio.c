@@ -4,10 +4,12 @@
 #include <soc/gpio.h>
 
 /*
- * These pins are configured before FSP SiliconInit(). Their native functions
- * and terminations were verified against the OEM GPIO register dump.
+ * Full GPIO configuration for Xiaomi Mi Notebook Air 13.3" (TM1703).
+ * Native functions and terminations verified against OEM hardware dumps.
  *
- * Panel power and backlight are controlled by the EC, not by PCH GPIO.
+ * Early bootblock configuration (memory straps GPP_D0..D3, M.2 straps
+ * GPP_E0..E2, and dGPU power/reset sequence GPP_G1/G3/G4) is handled
+ * in gpio_early.c before FSP-M.
  */
 static const struct pad_config gpio_table[] = {
 	/* ------- GPIO Community 0 ------- */
@@ -23,16 +25,20 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_NF(GPP_A7, NONE, DEEP, NF1),		/* PIRQA# */
 	PAD_CFG_NF(GPP_A8, NONE, DEEP, NF1),		/* CLKRUN# */
 	PAD_CFG_NF(GPP_A9, DN_20K, DEEP, NF1),		/* CLKOUT_LPC0 */
-	PAD_CFG_NF(GPP_A10, DN_20K, DEEP, NF1),	/* CLKOUT_LPC1 */
+	PAD_CFG_NF(GPP_A10, DN_20K, DEEP, NF1),		/* CLKOUT_LPC1 */
+	PAD_CFG_NF(GPP_A11, NONE, DEEP, NF1),		/* PME# */
 	PAD_NC(GPP_A12, NONE),
 	PAD_CFG_NF(GPP_A13, NONE, DEEP, NF1),		/* SUSWARN# */
 	PAD_CFG_NF(GPP_A14, NONE, DEEP, NF1),		/* SUS_STAT# */
-	PAD_CFG_NF(GPP_A15, DN_20K, DEEP, NF1),	/* SUS_ACK# */
+	PAD_CFG_NF(GPP_A15, DN_20K, DEEP, NF1),		/* SUS_ACK# */
 	PAD_NC(GPP_A16, NONE),
 	PAD_NC(GPP_A17, NONE),
 	PAD_NC(GPP_A18, NONE),
 	PAD_NC(GPP_A19, NONE),
+	PAD_NC(GPP_A20, NONE),
 	PAD_NC(GPP_A21, NONE),
+	PAD_NC(GPP_A22, NONE),
+	PAD_NC(GPP_A23, NONE),
 
 	/* ------- GPIO Group GPP_B ------- */
 	PAD_CFG_NF(GPP_B0, NONE, DEEP, NF1),		/* CORE_VID0 */
@@ -40,9 +46,9 @@ static const struct pad_config gpio_table[] = {
 	PAD_CFG_NF(GPP_B2, NONE, DEEP, NF1),		/* VRALERT# */
 	PAD_CFG_GPI_APIC_HIGH(GPP_B3, NONE, PLTRST),	/* Touchpad interrupt, IRQ 51 */
 	PAD_CFG_GPO(GPP_B4, 1, DEEP),			/* Bluetooth RF Kill (BT_DISABLE#) */
-	PAD_CFG_NF(GPP_B5, NONE, DEEP, NF1),		/* SRCCLKREQ0# */
-	PAD_CFG_NF(GPP_B6, NONE, DEEP, NF1),		/* SRCCLKREQ1# */
-	PAD_CFG_NF(GPP_B7, NONE, DEEP, NF1),		/* SRCCLKREQ2# */
+	PAD_CFG_NF(GPP_B5, NONE, DEEP, NF1),		/* SRCCLKREQ0# (dGPU RP1) */
+	PAD_CFG_NF(GPP_B6, NONE, DEEP, NF1),		/* SRCCLKREQ1# (NVMe RP9) */
+	PAD_CFG_NF(GPP_B7, NONE, DEEP, NF1),		/* SRCCLKREQ2# (Wi-Fi RP5) */
 	PAD_NC(GPP_B8, NONE),
 	PAD_NC(GPP_B9, NONE),
 	PAD_NC(GPP_B10, NONE),
@@ -64,14 +70,17 @@ static const struct pad_config gpio_table[] = {
 
 	/* ------- GPIO Group GPP_C ------- */
 	PAD_CFG_NF(GPP_C0, NONE, DEEP, NF1),		/* SMBCLK */
-	PAD_CFG_NF(GPP_C1, DN_20K, DEEP, NF1),	/* SMBDATA */
+	PAD_CFG_NF(GPP_C1, DN_20K, DEEP, NF1),		/* SMBDATA */
 	PAD_NC(GPP_C2, NONE),
 	PAD_CFG_NF(GPP_C3, NONE, DEEP, NF1),		/* SML0CLK */
 	PAD_CFG_NF(GPP_C4, NONE, DEEP, NF1),		/* SML0DATA */
 	PAD_NC(GPP_C5, NONE),
+	PAD_NC(GPP_C6, NONE),
+	PAD_NC(GPP_C7, NONE),
 	PAD_NC(GPP_C8, NONE),
 	PAD_NC(GPP_C9, NONE),
 	PAD_NC(GPP_C10, NONE),
+	PAD_NC(GPP_C11, NONE),
 	PAD_NC(GPP_C12, NONE),
 	PAD_NC(GPP_C13, NONE),
 	PAD_NC(GPP_C14, NONE),
@@ -86,6 +95,10 @@ static const struct pad_config gpio_table[] = {
 	PAD_NC(GPP_C23, NONE),
 
 	/* ------- GPIO Group GPP_D ------- */
+	PAD_CFG_GPI(GPP_D0, NONE, DEEP),		/* Memory strap bit 0 */
+	PAD_CFG_GPI(GPP_D1, NONE, DEEP),		/* Memory strap bit 1 */
+	PAD_CFG_GPI(GPP_D2, NONE, DEEP),		/* Memory strap bit 2 */
+	PAD_CFG_GPI(GPP_D3, NONE, DEEP),		/* Memory strap bit 3 */
 	PAD_NC(GPP_D4, NONE),
 	PAD_NC(GPP_D5, NONE),
 	PAD_NC(GPP_D6, NONE),
@@ -96,15 +109,21 @@ static const struct pad_config gpio_table[] = {
 	PAD_NC(GPP_D11, NONE),
 	PAD_NC(GPP_D12, NONE),
 	PAD_NC(GPP_D13, NONE),
+	PAD_NC(GPP_D14, NONE),
+	PAD_NC(GPP_D15, NONE),
 	PAD_NC(GPP_D16, NONE),
 	PAD_NC(GPP_D17, NONE),
 	PAD_NC(GPP_D18, NONE),
 	PAD_NC(GPP_D19, NONE),
+	PAD_NC(GPP_D20, NONE),
 	PAD_NC(GPP_D21, NONE),
 	PAD_NC(GPP_D22, NONE),
 	PAD_NC(GPP_D23, NONE),
 
 	/* ------- GPIO Group GPP_E ------- */
+	PAD_CFG_NF(GPP_E0, NONE, DEEP, NF1),		/* SATAXPCIE_0 */
+	PAD_CFG_NF(GPP_E1, NONE, DEEP, NF1),		/* SATAXPCIE_1 */
+	PAD_CFG_NF(GPP_E2, NONE, DEEP, NF1),		/* SATAXPCIE_2 */
 	PAD_CFG_GPO(GPP_E3, 1, DEEP),
 	PAD_CFG_NF(GPP_E4, NONE, RSMRST, NF1),		/* SATA_DEVSLP0 */
 	PAD_CFG_TERM_GPO(GPP_E5, 1, DN_20K, DEEP),
@@ -121,9 +140,9 @@ static const struct pad_config gpio_table[] = {
 	PAD_NC(GPP_E16, NONE),
 	PAD_CFG_NF(GPP_E17, NONE, DEEP, NF1),		/* EDP_HPD */
 	PAD_CFG_NF(GPP_E18, NONE, DEEP, NF1),		/* DDPB_CTRLCLK */
-	PAD_CFG_NF(GPP_E19, DN_20K, DEEP, NF1),	/* DDPB_CTRLDATA */
+	PAD_CFG_NF(GPP_E19, DN_20K, DEEP, NF1),		/* DDPB_CTRLDATA */
 	PAD_CFG_NF(GPP_E20, NONE, DEEP, NF1),		/* DDPC_CTRLCLK */
-	PAD_CFG_NF(GPP_E21, DN_20K, DEEP, NF1),	/* DDPC_CTRLDATA */
+	PAD_CFG_NF(GPP_E21, DN_20K, DEEP, NF1),		/* DDPC_CTRLDATA */
 	PAD_NC(GPP_E22, NONE),
 	PAD_NC(GPP_E23, NONE),
 
@@ -132,13 +151,16 @@ static const struct pad_config gpio_table[] = {
 	/* ------- GPIO Group GPD ------- */
 	PAD_CFG_NF(GPD0, NONE, PWROK, NF1),		/* BATLOW# */
 	PAD_CFG_NF(GPD1, NONE, PWROK, NF1),		/* ACPRESENT */
+	PAD_NC(GPD2, NONE),				/* LAN_WAKE# (NC) */
 	PAD_CFG_NF(GPD3, UP_20K, PWROK, NF1),		/* PWRBTN# */
 	PAD_CFG_NF(GPD4, NONE, PWROK, NF1),		/* SLP_S3# */
 	PAD_CFG_NF(GPD5, NONE, PWROK, NF1),		/* SLP_S4# */
 	PAD_CFG_NF(GPD6, NONE, PWROK, NF1),		/* SLP_A# */
+	PAD_NC(GPD7, NONE),
 	PAD_CFG_NF(GPD8, NONE, PWROK, NF1),		/* SUSCLK */
 	PAD_CFG_NF(GPD9, NONE, PWROK, NF1),		/* SLP_WLAN# */
 	PAD_CFG_NF(GPD10, NONE, PWROK, NF1),		/* SLP_S5# */
+	PAD_NC(GPD11, NONE),				/* LANPHYC (NC) */
 
 	/* ------- GPIO Community 3 ------- */
 
@@ -170,6 +192,8 @@ static const struct pad_config gpio_table[] = {
 
 	/* ------- GPIO Group GPP_G ------- */
 	PAD_CFG_GPO(GPP_G0, 1, PLTRST),
+	/* GPP_G1, GPP_G3, GPP_G4: dGPU power/reset rail handled in gpio_early.c */
+	PAD_NC(GPP_G2, NONE),
 	PAD_CFG_GPO(GPP_G5, 1, DEEP),
 	PAD_NC(GPP_G6, NONE),
 	PAD_NC(GPP_G7, NONE),
