@@ -29,8 +29,7 @@ TM1703_EC_FW := 3rdparty/blobs/mainboard/$(MAINBOARDDIR)/ec.bin
 PHONY += add_tm1703_ec
 
 add_tm1703_ec: add_intel_firmware $(TM1703_EC_FW)
-	printf "    DD         TM1703 EC -> coreboot.pre\n"
-	dd if=$(TM1703_EC_FW) of=$(obj)/coreboot.pre bs=1 seek=9437184 conv=notrunc status=none
+	printf "    CBFSTOOL   TM1703 EC -> coreboot.pre\n"
+	$(CBFSTOOL) $(obj)/coreboot.pre write -r SI_EC -f $(TM1703_EC_FW)
 
 $(obj)/coreboot.rom: add_tm1703_ec
-$(obj)/coreboot.rom: payloads/coreinfo/build/coreinfo.elf
