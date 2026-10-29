@@ -6,6 +6,12 @@ External (\_SB.UBTC, DeviceObj)
 External (\_SB.UBTC.UCSM, MutexObj)
 External (\_SB.UBTC.MSGI, FieldUnitObj)
 External (\_SB.UBTC.CCI, FieldUnitObj)
+External (\_SB.LID0, DeviceObj)
+External (\_SB.SLPB, DeviceObj)
+External (\_SB.BTID, IntObj)
+External (\_SB.WMID, DeviceObj)
+External (\_SB.PCI0.GFX0.INCB, MethodObj)
+External (\_SB.PCI0.GFX0.DECB, MethodObj)
 
 Scope (\_SB.PCI0.LPCB)
 {
@@ -33,6 +39,8 @@ Scope (\_SB.PCI0.LPCB)
 			Offset (0x10),
 			EQEN, 1,
 			ETEE, 1,
+			Offset (0x58),
+			WHKE, 8,
 			Offset (0x76),
 			ECSS, 4,
 			EOSS, 4,
@@ -83,6 +91,7 @@ Scope (\_SB.PCI0.LPCB)
 		{
 			Offset (0x02),
 			MACS, 1,
+			MLID, 1,
 			Offset (0x08),
 			NB0S, 8
 		}
@@ -111,6 +120,135 @@ Scope (\_SB.PCI0.LPCB)
 		Method (_STA, 0, NotSerialized)
 		{
 			Return (0x0f)
+		}
+
+		Method (PTS, 1, NotSerialized)
+		{
+			ECSS = Arg0
+		}
+
+		Method (WAK, 1, NotSerialized)
+		{
+			EQEN = One
+			EOSS = Arg0
+			TINI ()
+			Notify (BAT0, 0x81)
+			If (CondRefOf (\_SB.LID0))
+			{
+				Notify (\_SB.LID0, 0x80)
+			}
+			If (CondRefOf (\_SB.SLPB))
+			{
+				Notify (\_SB.SLPB, 0x02)
+			}
+		}
+
+		/* Brightness hotkeys */
+		Method (_Q1C, 0, NotSerialized)
+		{
+			If (CondRefOf (\_SB.PCI0.GFX0.INCB))
+			{
+				\_SB.PCI0.GFX0.INCB ()
+			}
+		}
+
+		Method (_Q1D, 0, NotSerialized)
+		{
+			If (CondRefOf (\_SB.PCI0.GFX0.DECB))
+			{
+				\_SB.PCI0.GFX0.DECB ()
+			}
+		}
+
+		/* Fn hotkeys / keyboard backlight */
+		Method (_Q2C, 0, NotSerialized)
+		{
+			If (\ECOK)
+			{
+				Local0 = WHKE
+			}
+			Else
+			{
+				Local0 = Zero
+			}
+
+			If (Local0)
+			{
+				\_SB.BTID = Local0
+				If (CondRefOf (\_SB.WMID))
+				{
+					Notify (\_SB.WMID, 0xD2)
+				}
+			}
+		}
+
+		Method (_Q65, 0, NotSerialized)
+		{
+			\_SB.BTID = 0x08
+			If (CondRefOf (\_SB.WMID))
+			{
+				Notify (\_SB.WMID, 0xD2)
+			}
+		}
+
+		Method (_Q69, 0, NotSerialized)
+		{
+			\_SB.BTID = 0x07
+			If (CondRefOf (\_SB.WMID))
+			{
+				Notify (\_SB.WMID, 0xD2)
+			}
+		}
+
+		/* Battery status & info notifications */
+		Method (_Q40, 0, NotSerialized)
+		{
+			Notify (BAT0, 0x81)
+		}
+
+		Method (_Q41, 0, NotSerialized)
+		{
+			Notify (BAT0, 0x81)
+		}
+
+		Method (_Q48, 0, NotSerialized)
+		{
+			Notify (BAT0, 0x80)
+		}
+
+		Method (_Q4C, 0, NotSerialized)
+		{
+			Notify (BAT0, 0x80)
+		}
+
+		/* AC status notifications */
+		Method (_Q50, 0, NotSerialized)
+		{
+			Notify (ADP1, 0x80)
+			Notify (BAT0, 0x80)
+		}
+
+		Method (_Q51, 0, NotSerialized)
+		{
+			Notify (ADP1, 0x80)
+			Notify (BAT0, 0x80)
+		}
+
+		/* Lid status notifications */
+		Method (_Q52, 0, NotSerialized)
+		{
+			If (CondRefOf (\_SB.LID0))
+			{
+				Notify (\_SB.LID0, 0x80)
+			}
+		}
+
+		Method (_Q53, 0, NotSerialized)
+		{
+			If (CondRefOf (\_SB.LID0))
+			{
+				Notify (\_SB.LID0, 0x80)
+			}
 		}
 
 		Method (_Q79, 0, NotSerialized)
