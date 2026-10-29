@@ -1,6 +1,11 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 
-/* Minimal EC and battery model based on the TM1703 OEM SSDT. */
+/* Minimal EC, battery and UCSI model based on the TM1703 OEM SSDT. */
+
+External (\_SB.UBTC, DeviceObj)
+External (\_SB.UBTC.UCSM, MutexObj)
+External (\_SB.UBTC.MSGI, FieldUnitObj)
+External (\_SB.UBTC.CCI, FieldUnitObj)
 
 Scope (\_SB.PCI0.LPCB)
 {
@@ -14,6 +19,27 @@ Scope (\_SB.PCI0.LPCB)
 			IO (Decode16, 0x62, 0x62, 0, 1)
 			IO (Decode16, 0x66, 0x66, 0, 1)
 		})
+
+		OperationRegion (RAM, EmbeddedControl, Zero, 0xff)
+		Field (RAM, ByteAcc, Lock, Preserve)
+		{
+			CMDB, 8,
+			Offset (0x06),
+			CMD2, 8,
+			CMD1, 8,
+			CMD0, 8
+		}
+
+		OperationRegion (USMB, SystemMemory, 0xfe801010, 0x30)
+		Field (USMB, ByteAcc, Lock, Preserve)
+		{
+			VERS, 16,
+			Offset (0x04),
+			CCI,  32,
+			CTRL, 64,
+			MSGI, 128,
+			MSGO, 128
+		}
 
 		OperationRegion (ECMB, SystemMemory, 0xfe802000, 0x200)
 		Field (ECMB, ByteAcc, Lock, Preserve)
@@ -48,6 +74,15 @@ Scope (\_SB.PCI0.LPCB)
 		Method (_STA, 0, NotSerialized)
 		{
 			Return (0x0f)
+		}
+
+		Method (_Q79, 0, NotSerialized)
+		{
+			Acquire (\_SB.UBTC.UCSM, 0xffff)
+			\_SB.UBTC.MSGI = MSGI
+			\_SB.UBTC.CCI = CCI
+			Release (\_SB.UBTC.UCSM)
+			Notify (\_SB.UBTC, 0x80)
 		}
 
 		Device (ADP1)
