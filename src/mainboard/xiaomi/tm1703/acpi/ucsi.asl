@@ -11,15 +11,37 @@ Scope (\_SB)
 
 		Mutex (UCSM, 0)
 
-		External (VERS, FieldUnitObj)
-		External (CCI, FieldUnitObj)
-		External (CTRL, FieldUnitObj)
-		External (MSGI, FieldUnitObj)
-		External (MSGO, FieldUnitObj)
+		External (\UCBA, IntObj)
+
+		Name (CRS, ResourceTemplate ()
+		{
+			Memory32Fixed (ReadWrite,
+				0x00000000,
+				0x00001000,
+				_Y01)
+		})
+
+		Method (_CRS, 0, Serialized)
+		{
+			CreateDWordField (CRS, \_SB.UBTC._Y01._BAS, CBAS)
+			CBAS = \UCBA
+			Return (CRS)
+		}
 
 		Method (_STA, 0, NotSerialized)
 		{
 			Return (0x0f)
+		}
+
+		OperationRegion (USBC, SystemMemory, \UCBA, 0x30)
+		Field (USBC, ByteAcc, Lock, Preserve)
+		{
+			VERS, 16,
+			Offset (0x04),
+			CCI,  32,
+			CTRL, 64,
+			MSGI, 128,
+			MSGO, 128
 		}
 
 		Device (CR01)
@@ -50,15 +72,15 @@ Scope (\_SB)
 					Case (0)
 					{
 						Acquire (UCSM, 0xffff)
-						\_SB.UBTC.VERS = \_SB.PCI0.LPCB.EC0.VERS
+						VERS = \_SB.PCI0.LPCB.EC0.VERS
 						Release (UCSM)
 						Return (Buffer (1) { 0x07 })
 					}
 					Case (1)
 					{
 						Acquire (UCSM, 0xffff)
-						\_SB.PCI0.LPCB.EC0.MSGO = \_SB.UBTC.MSGO
-						\_SB.PCI0.LPCB.EC0.CTRL = \_SB.UBTC.CTRL
+						\_SB.PCI0.LPCB.EC0.MSGO = MSGO
+						\_SB.PCI0.LPCB.EC0.CTRL = CTRL
 						\_SB.PCI0.LPCB.EC0.CMD0 = 0x80
 						\_SB.PCI0.LPCB.EC0.CMDB = 0xe0
 						Release (UCSM)
@@ -66,8 +88,8 @@ Scope (\_SB)
 					Case (2)
 					{
 						Acquire (UCSM, 0xffff)
-						\_SB.UBTC.MSGI = \_SB.PCI0.LPCB.EC0.MSGI
-						\_SB.UBTC.CCI = \_SB.PCI0.LPCB.EC0.CCI
+						MSGI = \_SB.PCI0.LPCB.EC0.MSGI
+						CCI = \_SB.PCI0.LPCB.EC0.CCI
 						Release (UCSM)
 					}
 				}
