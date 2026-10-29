@@ -90,8 +90,10 @@ Scope (\_SB.PCI0.LPCB)
 		Field (ECMB, ByteAcc, Lock, Preserve)
 		{
 			Offset (0x02),
-			MACS, 1,
+			, 1,
 			MLID, 1,
+			, 3,
+			MACS, 1,
 			Offset (0x08),
 			NB0S, 8
 		}
