@@ -37,6 +37,7 @@ static void mainboard_fill_ssdt(const struct device *dev)
 		return;
 	}
 	memset(region_ptr, 0, ucsi_alloc_len);
+	*(uint16_t *)region_ptr = 0x0100; /* UCSI version 1.0 */
 
 	struct opregion opreg = {
 		.name = "USBC",

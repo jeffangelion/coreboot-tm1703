@@ -82,6 +82,7 @@ Scope (\_SB)
 					Case (2)
 					{
 						Acquire (UCSM, 0xffff)
+						\_SB.UBTC.VERS = \_SB.PCI0.LPCB.EC0.VERS
 						\_SB.UBTC.MSGI = \_SB.PCI0.LPCB.EC0.MSGI
 						\_SB.UBTC.CCI = \_SB.PCI0.LPCB.EC0.CCI
 						Release (UCSM)
