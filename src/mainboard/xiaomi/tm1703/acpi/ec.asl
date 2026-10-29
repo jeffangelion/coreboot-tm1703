@@ -20,6 +20,8 @@ Scope (\_SB.PCI0.LPCB)
 			IO (Decode16, 0x66, 0x66, 0, 1)
 		})
 
+		Name (\ECOK, Zero)
+
 		OperationRegion (RAM, EmbeddedControl, Zero, 0xff)
 		Field (RAM, ByteAcc, Lock, Preserve)
 		{
@@ -27,7 +29,42 @@ Scope (\_SB.PCI0.LPCB)
 			Offset (0x06),
 			CMD2, 8,
 			CMD1, 8,
-			CMD0, 8
+			CMD0, 8,
+			Offset (0x10),
+			EQEN, 1,
+			ETEE, 1,
+			Offset (0x76),
+			ECSS, 4,
+			EOSS, 4,
+			Offset (0x92),
+			ETAF, 8
+		}
+
+		Method (TINI, 0, NotSerialized)
+		{
+			If (\ECOK)
+			{
+				ETAF = Zero
+				ETEE = One
+			}
+		}
+
+		Method (_REG, 2, NotSerialized)
+		{
+			If (Arg0 == 0x03)
+			{
+				\ECOK = Arg1
+				If (Arg1 == One)
+				{
+					EQEN = One
+					TINI ()
+					EOSS = 0x05
+				}
+				Else
+				{
+					ETEE = Zero
+				}
+			}
 		}
 
 		OperationRegion (USMB, SystemMemory, 0xfe801010, 0x30)

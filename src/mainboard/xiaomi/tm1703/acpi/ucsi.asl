@@ -75,8 +75,11 @@ Scope (\_SB)
 						Acquire (UCSM, 0xffff)
 						\_SB.PCI0.LPCB.EC0.MSGO = \_SB.UBTC.MSGO
 						\_SB.PCI0.LPCB.EC0.CTRL = \_SB.UBTC.CTRL
-						\_SB.PCI0.LPCB.EC0.CMD0 = 0x80
-						\_SB.PCI0.LPCB.EC0.CMDB = 0xe0
+						If (\ECOK)
+						{
+							\_SB.PCI0.LPCB.EC0.CMD0 = 0x80
+							\_SB.PCI0.LPCB.EC0.CMDB = 0xe0
+						}
 						Release (UCSM)
 					}
 					Case (2)
