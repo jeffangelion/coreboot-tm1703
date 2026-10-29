@@ -91,12 +91,20 @@ util/intelvbttool/intelvbttool \
 
 Дискретная видеокарта NVIDIA MX150 (GP108M `10de:1d12`) не имеет собственного чипа SPI flash
 на материнской плате и получает VBIOS динамически через ACPI-метод `_ROM` (`\_SB.PCI0.RP01.PXSX._ROM`).
-VBIOS извлекается из секции BIOS заводского дампа (FFS файл с GUID `E35B2FEA-017C-47E8-AF17-C38CA2ED1F8B`):
+VBIOS извлекается из секции BIOS заводского дампа (FFS-файл с GUID `E35B2FEA-017C-47E8-AF17-C38CA2ED1F8B`).
+
+В составе coreboot нет средств для разбора вложенных сжатых томов UEFI Firmware Volume,
+поэтому для распаковки используется **сторонняя утилита** `uefiextract` из проекта
+[UEFITool (LongSoft)](https://github.com/LongSoft/UEFITool) (готовые бинарные сборки доступны на
+https://github.com/LongSoft/UEFITool/releases). Она не входит в репозиторий coreboot
+и скачивается/собирается пользователем отдельно:
 
 ```sh
-# Извлечение через UEFIExtract:
-util/UEFIExtract/UEFIExtract "$tm1703_dump"
-cp "tm1703-16mib.bin.dump/2 BIOS region/.../346 E35B2FEA-017C-47E8-AF17-C38CA2ED1F8B/0 Raw section/body.bin" \
+# Распаковка томов дампа внешней утилитой UEFIExtract:
+uefiextract "$tm1703_dump"
+
+# Копирование извлечённого сырого образа VBIOS (Raw section body.bin файла E35B2FEA...):
+cp "$tm1703_dump.dump/2 BIOS region/1 1FD0BACE-6F0A-4085-901E-F6210385CB6F/0 20BC8AC9-94D1-4208-AB28-5D673FD73486/0 EE4E5898-3914-4259-9D6E-DC7BD79403CF/1 Volume image section/0 8C8CE578-8A3D-4F1C-9935-896185C32DD3/346 E35B2FEA-017C-47E8-AF17-C38CA2ED1F8B/0 Raw section/body.bin" \
   "$tm1703_blob_dir/pci10de,1d12.rom"
 ```
 
