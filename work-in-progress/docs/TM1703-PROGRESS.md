@@ -1350,6 +1350,26 @@ SHA-256 `build/coreboot.rom`:
 3309f2e39f882d10d982cc774e9d0ca6f7b7b77ac8aa5e2c7d3db1974e770dda
 ```
 
+Тестирование g15 на железе показало:
+1. `Method (_CRS)` отработал штатно: ядро успешно запросило ресурсы `\_SB.UBTC` и зарегистрировало память `7aa09000-7aa09fff : USBC000:00` в `/proc/iomem`. Ошибка `-ENODEV (missing memory resource)` полностью устранена.
+2. Однако драйвер `ucsi_acpi` завершился с ошибкой `-5` (`-EIO`): при загрузке DSDT переменная `\UCBA` ещё не существовала в namespace (она находилась в SSDT), поэтому статическое объявление `OperationRegion (USBC, SystemMemory, \UCBA, 0x30)` внутри DSDT упало с `AE_NOT_FOUND`. Поля `VERS`, `CCI`, `CTRL`, `MSGI`, `MSGO` не создались, и `_DSM` упал при обращении к ним.
+
+### g16: динамическая генерация OperationRegion(USBC) в SSDT
+
+- В `src/mainboard/xiaomi/tm1703/ramstage.c`:
+  - `mainboard_fill_ssdt()` генерирует `OperationRegion (USBC)` и `Field (USBC)` непосредственно в SSDT под `Scope (\_SB.UBTC)` с готовым физическим адресом выделенного CBMEM-буфера (паттерн Wilco EC в coreboot).
+  - Сохранён экспорт `Name (\UCBA, ...)` для динамического `Method (_CRS)`.
+- В `src/mainboard/xiaomi/tm1703/acpi/ucsi.asl`:
+  - Удалено статическое объявление `OperationRegion (USBC)` из DSDT.
+  - Поля mailbox объявлены через `External (\_SB.UBTC.*, FieldUnitObj)`.
+  - В `_DSM` обращение к полям mailbox нормализовано через `\_SB.UBTC.*`.
+- `CONFIG_LOCALVERSION` обновлен до `g16`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+ad8e5bc4ed5e2addbf888e059d779c9367e41efd6a1f60741befc88ed10c10e2
+```
+
 Статус: образ готов к прошивке на программаторе T48.
 
 ## Условный roadmap
