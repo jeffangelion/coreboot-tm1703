@@ -279,6 +279,21 @@ void pci_rom_run(struct device *dev)
 /* ACPI */
 #if CONFIG(HAVE_ACPI_TABLES)
 
+static size_t pci_rom_size(const struct rom_header *rom)
+{
+	if (!rom)
+		return 0;
+
+	if (le16_to_cpu(rom->signature) == PCI_ROM_HDR) {
+		const struct pci_data *rom_data =
+			(const void *)rom + le16_to_cpu(rom->data);
+		if (rom_data->ilen)
+			return le16_to_cpu(rom_data->ilen) * 512;
+	}
+
+	return rom->size * 512;
+}
+
 void pci_rom_ssdt(const struct device *device)
 {
 	const struct rom_header *rom;
@@ -291,8 +306,6 @@ void pci_rom_ssdt(const struct device *device)
 	/* Only handle enabled devices */
 	if (!device->enabled)
 		return;
-
-	size_t rom_size;
 
 	/* Already loaded into DRAM? */
 	rom = device->pci_vga_option_rom;
@@ -311,23 +324,14 @@ void pci_rom_ssdt(const struct device *device)
 			return;
 		}
 
-		/* Determine ROM size from PCIR header if available */
-		rom_size = rom->size * 512;
-		if (le16_to_cpu(rom->signature) == PCI_ROM_HDR) {
-			const struct pci_data *rom_data =
-				(const void *)rom + le16_to_cpu(rom->data);
-			if (rom_data->ilen)
-				rom_size = le16_to_cpu(rom_data->ilen) * 512;
-		}
-
-		/* Prepare memory */
-		if (!rom_size) {
+		const size_t probe_size = pci_rom_size(rom);
+		if (!probe_size) {
 			printk(BIOS_ERR, "%s: ROM has zero length!\n",
 			dev_path(device));
 			return;
 		}
 
-		void *cbrom = cbmem_add(CBMEM_ID_ROM0 + ngfx, rom_size);
+		void *cbrom = cbmem_add(CBMEM_ID_ROM0 + ngfx, probe_size);
 		if (!cbrom) {
 			printk(BIOS_ERR, "%s: Failed to allocate CBMEM.\n",
 			dev_path(device));
@@ -336,17 +340,15 @@ void pci_rom_ssdt(const struct device *device)
 		/* Increment CBMEM id for next device */
 		ngfx++;
 
-		memcpy(cbrom, rom, rom_size);
+		memcpy(cbrom, rom, probe_size);
 
 		rom = cbrom;
-	} else {
-		rom_size = rom->size * 512;
-		if (le16_to_cpu(rom->signature) == PCI_ROM_HDR) {
-			const struct pci_data *rom_data =
-				(const void *)rom + le16_to_cpu(rom->data);
-			if (rom_data->ilen)
-				rom_size = le16_to_cpu(rom_data->ilen) * 512;
-		}
+	}
+
+	const size_t rom_size = pci_rom_size(rom);
+	if (!rom_size) {
+		printk(BIOS_ERR, "%s: ROM has zero length!\n", dev_path(device));
+		return;
 	}
 
 	const char *scope = acpi_device_path(device);
