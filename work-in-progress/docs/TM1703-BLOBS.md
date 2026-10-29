@@ -87,6 +87,25 @@ util/intelvbttool/intelvbttool \
 конфигурацией можно также снять live VBT из debugfs работающей стоковой системы.
 Не подменяйте поставляемый файл VBT от другой платы или варианта панели.
 
+## NVIDIA GeForce MX150 VBIOS
+
+Дискретная видеокарта NVIDIA MX150 (GP108M `10de:1d12`) не имеет собственного чипа SPI flash
+на материнской плате и получает VBIOS динамически через ACPI-метод `_ROM` (`\_SB.PCI0.RP01.PXSX._ROM`).
+VBIOS извлекается из секции BIOS заводского дампа (FFS файл с GUID `E35B2FEA-017C-47E8-AF17-C38CA2ED1F8B`):
+
+```sh
+# Извлечение через UEFIExtract:
+util/UEFIExtract/UEFIExtract "$tm1703_dump"
+cp "tm1703-16mib.bin.dump/2 BIOS region/.../346 E35B2FEA-017C-47E8-AF17-C38CA2ED1F8B/0 Raw section/body.bin" \
+  "$tm1703_blob_dir/pci10de,1d12.rom"
+```
+
+Ожидаемый размер: 180224 байт (0x2C000).
+SHA-256 эталонного заводского VBIOS GP108 SKU 0 (версия 86.08.0E.00.5A):
+```text
+30971732921ec38e63edc2f71f6ee110ab0f560afe8b53b9fdd2abfc37e446b2
+```
+
 ## Проверка перед сборкой
 
 ```sh
@@ -94,14 +113,16 @@ stat -c '%s %n' \
   "$tm1703_blob_dir/descriptor.bin" \
   "$tm1703_blob_dir/me.bin" \
   "$tm1703_blob_dir/ec.bin" \
+  "$tm1703_blob_dir/pci10de,1d12.rom" \
   src/mainboard/xiaomi/tm1703/data.vbt
 sha256sum \
   "$tm1703_blob_dir/descriptor.bin" \
   "$tm1703_blob_dir/me.bin" \
   "$tm1703_blob_dir/ec.bin" \
+  "$tm1703_blob_dir/pci10de,1d12.rom" \
   src/mainboard/xiaomi/tm1703/data.vbt
 ```
 
-Ожидаемые размеры: 4096, 9433088, 262144 и 4441 байт соответственно. IFD, ME
-и EC остаются локальными и незатреканными внутри `3rdparty/blobs`; VBT
+Ожидаемые размеры: 4096, 9433088, 262144, 180224 и 4441 байт соответственно. IFD, ME,
+EC и dGPU VBIOS остаются локальными и незатреканными внутри `3rdparty/blobs`; VBT
 отслеживается вместе с исходниками платы.
