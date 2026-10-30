@@ -1,7 +1,7 @@
 ## SPDX-License-Identifier: GPL-2.0-only
 
 boot_option=Fallback
-debug_level=Debug
+debug_level=Notice
 hyper_threading=Enable
 vtd=Enable
 power_on_after_fail=Disable

@@ -75,6 +75,10 @@ config PCIEXP_L1_SUB_STATE
 config PCIEXP_CLK_PM
 	default n
 
+# Laptops must not power on automatically when AC charger is plugged in
+config POWER_STATE_DEFAULT_ON_AFTER_FAILURE
+	default n
+
 # This platform has limited means to display POST codes
 config NO_POST
 	default y
