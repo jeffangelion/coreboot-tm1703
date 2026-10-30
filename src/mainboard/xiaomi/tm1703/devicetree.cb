@@ -53,15 +53,8 @@ chip soc/intel/skylake
 		device ref heci1 on end
 		device ref sata on
 			register "SataSalpSupport" = "1"
-			register "SataPortsEnable" = "{
-				[0] = 1,
-				[1] = 1,
-				[2] = 1,
-			}"
-			register "SataPortsDevSlp" = "{
-				[0] = 1,
-				[2] = 1,
-			}"
+			register "SataPortsEnable[0]" = "1"
+			register "SataPortsDevSlp[0]" = "1"
 		end
 		device ref hda on end
 		device ref smbus on end
