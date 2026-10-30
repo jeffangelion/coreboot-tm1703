@@ -1650,6 +1650,25 @@ SHA-256 `build/coreboot.rom`:
 46adfac083aa3cda02ebbee28fec461da16a85ff30aaa7f939b2231f093979a7
 ```
 
+### g28: устранение автозапуска при подключении ЗУ, изоляция RTC Century и loglevel Notice
+
+Причина:
+1. При подключении зарядного устройства ноутбук самопроизвольно включался в S0.
+2. Логи ядра и coreboot показывали постоянную ошибку контрольной суммы CMOS (`Invalid CMOS checksum detected! Force fallback boot...`).
+3. При аудите выявлена коллизия: байт CMOS 50 (`0x32`, биты 400..407) является регистром `RTC_CLK_ALTCENTURY`. Драйвер RTC и ОС при каждой синхронизации времени записывают туда BCD-значение текущего века (`0x20`), затирая опции `hyper_threading` / `vtd` и сбивая 16-битную контрольную сумму CMOS.
+4. Из-за невалидной контрольной суммы coreboot сбрасывал настройки в Kconfig-дефолт `CONFIG_MAINBOARD_POWER_FAILURE_STATE`, который в общем коде Intel PMC по умолчанию равнялся 1 (`MAINBOARD_POWER_STATE_ON`). Это приводило к сбросу бита `SLEEP_AFTER_POWER_FAIL` в `GEN_PMCON_B`, и аппаратура PCH включала систему при подаче внешнего питания.
+
+Выполненные изменения:
+1. В `src/mainboard/xiaomi/tm1703/cmos.layout` байт 50 (биты 400..407) зарезервирован как `century`, а опции `debug_level`, `hyper_threading`, `vtd` и `power_on_after_fail` сдвинуты в диапазон бит 408..417. Диапазон контрольной суммы изменён на `408 423 984`, полностью исключая байт века из расчёта.
+2. В `src/mainboard/xiaomi/tm1703/Kconfig` добавлен `POWER_STATE_DEFAULT_ON_AFTER_FAILURE = n`, что переключает дефолт платы на `POWER_STATE_OFF_AFTER_FAILURE = y` (`CONFIG_MAINBOARD_POWER_FAILURE_STATE = 0`). Даже при чистом CMOS машина остаётся в S5 (выключена) при подключении ЗУ.
+3. Уровень логирования по умолчанию понижен с `Debug` (7) до `Notice` (5) в `src/mainboard/xiaomi/tm1703/cmos.default` и `.config`, что снижает износ SPI flash и ускоряет старт платформы.
+4. `CONFIG_LOCALVERSION` обновлен до `g28`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+9f05c486ffacb9316435e63076ec2286bc28ece3acae43f73ff930ec96716846
+```
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
