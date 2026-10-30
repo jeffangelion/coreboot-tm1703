@@ -1694,8 +1694,10 @@ SHA-256 `build/coreboot.rom`:
    - Добавить fallback на `/dev/nvram` со смещением на 14 байт (RTC time header) при блокировке прямого I/O (`iopl(3)` возвращает `EPERM` под Secure Boot / Lockdown).
    - Добавить чтение структуры `cmos_layout.bin` из sysfs (`/sys/firmware/coreboot/tables` через модуль ядра `coreboot_table`) вместо прямого сканирования физической памяти через `/dev/mem`.
    - Обеспечить прозрачную работу `nvramtool -a`, `-r`, `-w` в современных Linux-системах с активным UEFI Secure Boot.
-4. Исследование и оптимизация энергопотребления в простое:
-   - Реализация Runtime D3cold (RTD3) для дискретной графики NVIDIA GeForce MX150;
+4. [Выполнено в g27] Реализация Runtime D3cold (RTD3) для дискретной графики NVIDIA GeForce MX150:
+   - Включён драйвер `DRIVERS_PCIE_RTD3_DEVICE` с пинами `GPP_G4` (PWEN#) и `GPP_G1` (HLRS#);
+   - Сгенерирован ACPI PowerResource `PR00` (`_PR0`/`_PR3`) с методами `_ON` и `_OFF`;
+   - Проверено на железе: в простое видеокарта автоматически переходит в `D3cold` (`suspended`, потребление 0 Вт, `LNXPOWER:00` status 0), а при запуске приложений через `DRI_PRIME=1` мгновенно просыпается в `D0` (`active`), после чего возвращается в `D3cold` через 5 секунд неактивности;
    - Тонкая настройка состояний энергосбережения шины PCIe (ASPM L1.1 / L1.2).
 5. Комплексный upstream-патч поддержки Option ROM и ACPI-метода _ROM в общем коде coreboot:
    - `src/device/pci_rom.c`: поддержка образов >128K через чтение 16-битного `ilen` из PCIR
