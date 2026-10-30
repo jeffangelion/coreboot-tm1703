@@ -1669,6 +1669,25 @@ SHA-256 `build/coreboot.rom`:
 9f05c486ffacb9316435e63076ec2286bc28ece3acae43f73ff930ec96716846
 ```
 
+### g29: включение портов SATA AHCI в devicetree
+
+Причина:
+В ядре Linux контроллер SATA (`00:17.0`) инициализировался с нулевой маской портов:
+`ahci 0000:00:17.0: 0/2 ports implemented (port mask 0x0)`.
+В `src/mainboard/xiaomi/tm1703/devicetree.cb` узел `device ref sata` был объявлен пустым (`on end`), из-за чего массив `config->SataPortsEnable` оставался полностью нулевым, и FSP-S отключал все порты SATA PCH Sunrise Point-LP.
+
+Выполненные изменения:
+1. В `src/mainboard/xiaomi/tm1703/devicetree.cb` под `device ref sata`:
+   - Включены порты: `register "SataPortsEnable" = "{ [0] = 1, [1] = 1, [2] = 1 }"`;
+   - Включена поддержка DevSlp для портов 0 и 2: `register "SataPortsDevSlp" = "{ [0] = 1, [2] = 1 }"` (соответствует пинам `GPP_E4` и `GPP_E6` в `gpio.c`);
+   - Включено энергосбережение линков ALPM: `register "SataSalpSupport" = "1"`.
+2. `CONFIG_LOCALVERSION` обновлен до `g29`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+ae3ab4e60dc33bc836beb10e4b23e1529bf40c80544f7a404c02824d0fd505d7
+```
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
