@@ -1785,6 +1785,9 @@ SHA-256 `build/coreboot.rom`:
    - Размер CBFS (`COREBOOT`) расширен с 4.4 МБ до **13.43 МБ** (свободно 9.7 МБ).
    - Полученная альтернативная разметка сохранена в дереве порта как `src/mainboard/xiaomi/tm1703/board_me_truncated.fmd`.
    - Образ `coreboot_relocated_ec_13mb_cbfs.rom` (SHA-256 `d730a79ce574ea0a733f57860de157f714a9768e0965a3d65bd9011225a089a4`) прошит и проверен на железе: система загрузилась в Linux, NVMe SSD работает в R/W режиме без сбоев, сеть, звук, графика и Secure Boot полностью активны.
+8. **Анализ внутренней прошивки (Internal / In-system Flashing):**
+   - **Первичная установка (OEM Insyde $\to$ coreboot):** Невозможна без внешнего программатора. Заводской BIOS аппаратно блокирует запись через регистры PCH Fast SPI: `PR0` (`0x00ec0000..0x00ffffff`, Read-Only, защищает вектор сброса `0xfffffff0` и bootblock), `PR1` (`0x00940000..0x00d3ffff`, Read-Only, защищает тело BIOS), `FLOCKDN = 1` (запрещает сброс или изменение PR из ОС) и `SMM_BWP` (`EISS = 1`).
+   - **In-system flashing под coreboot:** Полностью поддерживается через `flashrom -p internal`. Конфигурация coreboot (`CONFIG_BOOTMEDIA_LOCK_NONE=y`) оставляет регистры PR0..PR4 открытыми (`0x0`) и не взводит SMM_BWP. Последующие обновления coreboot можно безопасно выполнять прямо из ОС: `flashrom -p internal --fmap -i COREBOOT -w build/coreboot.rom`.
 
 ### Желательные, но низкоприоритетные улучшения
 
