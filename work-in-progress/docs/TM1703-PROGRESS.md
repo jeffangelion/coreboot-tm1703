@@ -1629,6 +1629,27 @@ SHA-256 `build/coreboot.rom`:
 e2316e92fe66051af6bfa6fa525b6a55c172334caedaea96ef6e15ff1cfc7a66
 ```
 
+### g27: настройка PCIe RTD3 для дискретной графики NVIDIA MX150
+
+Причина:
+Для динамического энергосбережения и перевода дискретной видеокарты NVIDIA GeForce MX150 (GP108M) в состояние D3cold в простое, предотвращая фоновый нагрев и расход ~1.5–2 Вт энергии от батареи.
+
+Выполненные изменения:
+1. В `src/mainboard/xiaomi/tm1703/Kconfig` добавлен `select DRIVERS_PCIE_RTD3_DEVICE`.
+2. В `src/mainboard/xiaomi/tm1703/devicetree.cb` под `device ref pcie_rp1` generic-чип заменён на `chip drivers/pcie/rtd3/device`:
+   - имя узла: `PXSX`;
+   - линия включения питания: `enable_gpio = ACPI_GPIO_OUTPUT_ACTIVE_LOW(GPP_G4)` (`PWEN#`);
+   - задержки питания: `enable_delay_ms = 16`, `enable_off_delay_ms = 4`;
+   - линия аппаратного сброса: `reset_gpio = ACPI_GPIO_OUTPUT_ACTIVE_LOW(GPP_G1)` (`HLRS#`);
+   - задержки сброса: `reset_delay_ms = 10`, `reset_off_delay_ms = 4`.
+3. Драйвер RTD3 автоматически создаёт ACPI Power Resource (`_PR0`, `_PR3`, `_ON`, `_OFF`, `_STA`) и сохраняет штатный метод `_ROM` через `pci_rom_ssdt()`.
+4. `CONFIG_LOCALVERSION` обновлен до `g27`.
+
+SHA-256 `build/coreboot.rom`:
+```text
+46adfac083aa3cda02ebbee28fec461da16a85ff30aaa7f939b2231f093979a7
+```
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
