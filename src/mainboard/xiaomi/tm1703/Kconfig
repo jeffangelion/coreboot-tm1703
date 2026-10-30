@@ -75,6 +75,11 @@ config PCIEXP_L1_SUB_STATE
 config PCIEXP_CLK_PM
 	default n
 
+# Required to preserve ICC profiles and NVMe PCIe clocking when me_cleaner is used
+config ME_CLEANER_ARGS
+	string
+	default "-S --whitelist MFS"
+
 # Laptops must not power on automatically when AC charger is plugged in
 config POWER_STATE_DEFAULT_ON_AFTER_FAILURE
 	default n
