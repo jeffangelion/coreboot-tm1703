@@ -1826,10 +1826,10 @@ da900121b71953df760fbda979ec6e1aa10861cbc7e5a204f31ff15713c6de3a
 2. [Выполнено в g26] Добавить поддержку CMOS-настроек (`cmos.layout`, `cmos.default`):
    переключение HyperThreading, VT-d, состояние питания после сбоя (`power_on_after_fail`)
    и сохранение/чтение параметров через `nvramtool`.
-3. Модернизация утилиты `nvramtool` в upstream coreboot (совместимость с Secure Boot и Linux Kernel Lockdown):
-   - Добавить fallback на `/dev/nvram` со смещением на 14 байт (RTC time header) при блокировке прямого I/O (`iopl(3)` возвращает `EPERM` под Secure Boot / Lockdown).
-   - Добавить чтение структуры `cmos_layout.bin` из sysfs (`/sys/firmware/coreboot/tables` через модуль ядра `coreboot_table`) вместо прямого сканирования физической памяти через `/dev/mem`.
-   - Обеспечить прозрачную работу `nvramtool -a`, `-r`, `-w` в современных Linux-системах с активным UEFI Secure Boot.
+3. [Выполнено] Модернизация утилиты `nvramtool` в upstream coreboot (совместимость с Secure Boot и Linux Kernel Lockdown):
+   - Добавлено чтение структуры coreboot tables из sysfs (`/sys/firmware/coreboot/tables` через модуль ядра `coreboot_table`) с проверкой сигнатуры и контрольных сумм вместо прямого сканирования физической памяти через `/dev/mem`;
+   - Добавлен прозрачный fallback на `/dev/nvram` при блокировке прямого port I/O (`iopl(3)` возвращает `EPERM` под Secure Boot / Lockdown) с адресацией через `pread()`/`pwrite()` со смещением на 14 байт (`CMOS_RTC_AREA_SIZE`);
+   - Обеспечена прозрачная работа `nvramtool -a`, `-r`, `-w` в современных Linux-системах с активным UEFI Secure Boot.
 4. [Выполнено в g27] Реализация Runtime D3cold (RTD3) для дискретной графики NVIDIA GeForce MX150:
    - Включён драйвер `DRIVERS_PCIE_RTD3_DEVICE` с пинами `GPP_G4` (PWEN#) и `GPP_G1` (HLRS#);
    - Сгенерирован ACPI PowerResource `PR00` (`_PR0`/`_PR3`) с методами `_ON` и `_OFF`;
