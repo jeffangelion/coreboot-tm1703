@@ -9,7 +9,8 @@ void flashconsole_init(void);
 void flashconsole_tx_byte(unsigned char c);
 void flashconsole_tx_flush(void);
 
-#define __CONSOLE_FLASH_ENABLE__	CONFIG(CONSOLE_SPI_FLASH)
+#define __CONSOLE_FLASH_ENABLE__	(CONFIG(CONSOLE_SPI_FLASH) && \
+	(!ENV_SMM || CONFIG(DEBUG_SMI)))
 
 #if __CONSOLE_FLASH_ENABLE__
 static inline void __flashconsole_init(void)	{ flashconsole_init(); }

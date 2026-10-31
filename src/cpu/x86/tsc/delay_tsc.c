@@ -31,6 +31,7 @@ void udelay(unsigned int us)
 }
 
 #if CONFIG(TSC_MONOTONIC_TIMER)
+#include <smp/spinlock.h>
 #include <timer.h>
 
 static struct monotonic_counter {
@@ -39,11 +40,15 @@ static struct monotonic_counter {
 	uint64_t last_value;
 } mono_counter;
 
+DECLARE_SPIN_LOCK(mono_counter_lock);
+
 void timer_monotonic_get(struct mono_time *mt)
 {
 	uint64_t current_tick;
 	uint64_t ticks_elapsed;
 	unsigned long ticks_per_usec;
+
+	spin_lock(&mono_counter_lock);
 
 	if (!mono_counter.initialized) {
 		init_timer();
@@ -52,6 +57,12 @@ void timer_monotonic_get(struct mono_time *mt)
 	}
 
 	current_tick = rdtscll();
+	if (current_tick <= mono_counter.last_value) {
+		*mt = mono_counter.time;
+		spin_unlock(&mono_counter_lock);
+		return;
+	}
+
 	ticks_elapsed = current_tick - mono_counter.last_value;
 	ticks_per_usec = tsc_freq_mhz();
 
@@ -66,5 +77,7 @@ void timer_monotonic_get(struct mono_time *mt)
 
 	/* Save result. */
 	*mt = mono_counter.time;
+
+	spin_unlock(&mono_counter_lock);
 }
 #endif
