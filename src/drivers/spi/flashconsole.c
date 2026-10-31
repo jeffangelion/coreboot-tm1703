@@ -5,7 +5,7 @@
 #include <fmap.h>
 #include <console/console.h>
 #include <console/flash.h>
-#include <smp/node.h>
+#include <smp/spinlock.h>
 #include <types.h>
 
 #define LINE_BUFFER_SIZE 128
@@ -16,6 +16,8 @@ static struct region_device rdev;
 static uint8_t line_buffer[LINE_BUFFER_SIZE];
 static size_t offset;
 static size_t line_offset;
+static bool busy;
+DECLARE_SPIN_LOCK(flashconsole_lock);
 
 void flashconsole_init(void)
 {
@@ -68,45 +70,11 @@ void flashconsole_init(void)
 	rdev_ptr = &rdev;
 }
 
-void flashconsole_tx_byte(unsigned char c)
+static void flashconsole_tx_flush_internal(void)
 {
-	/* The flashconsole state and SPI accesses are not synchronized. */
-	if (ENV_RAMSTAGE && !boot_cpu())
-		return;
-	if (!rdev_ptr)
-		return;
-
-	size_t region_size = region_device_sz(rdev_ptr);
-
-	if (line_offset < LINE_BUFFER_SIZE)
-		line_buffer[line_offset++] = c;
-
-	if (line_offset >= LINE_BUFFER_SIZE ||
-	    offset + line_offset >= region_size || c == '\n') {
-		flashconsole_tx_flush();
-	}
-}
-
-void flashconsole_tx_flush(void)
-{
-	size_t len;
+	size_t len = line_offset;
 	size_t region_size;
 
-	/* Prevent any recursive loops in case the spi flash driver
-	 * calls printk (in case of transaction timeout or
-	 * any other error while writing) */
-	static bool busy;
-
-	/* The flashconsole state and SPI accesses are not synchronized. */
-	if (ENV_RAMSTAGE && !boot_cpu())
-		return;
-
-	len = line_offset;
-
-	/* In addition to being an obvious runtime optimization, checking for
-	 * len = 0 also prevents false disabling of the driver, as rdev_writeat
-	 * seems to return -1 if len is zero even though this should be a
-	 * recoverable condition. */
 	if (busy || !rdev_ptr || len == 0)
 		return;
 
@@ -115,15 +83,57 @@ void flashconsole_tx_flush(void)
 	if (offset + len >= region_size)
 		len = region_size - offset;
 
-	if (rdev_writeat(&rdev, line_buffer, offset, len) != len)
+	if (rdev_writeat(&rdev, line_buffer, offset, len) != len) {
+		busy = false;
 		return;
+	}
 
 	// If the region is full, stop future write attempts
-	if (offset + len >= region_size)
+	if (offset + len >= region_size) {
+		rdev_ptr = NULL;
+		busy = false;
 		return;
+	}
 
 	offset += len;
 	line_offset = 0;
 
 	busy = false;
+}
+
+void flashconsole_tx_byte(unsigned char c)
+{
+	/* Drop recursive writes if an SPI write is already in progress
+	 * (e.g. printk called from the SPI flash driver). */
+	if (busy || !rdev_ptr)
+		return;
+
+	spin_lock(&flashconsole_lock);
+
+	if (busy || !rdev_ptr) {
+		spin_unlock(&flashconsole_lock);
+		return;
+	}
+
+	size_t region_size = region_device_sz(rdev_ptr);
+
+	if (line_offset < LINE_BUFFER_SIZE)
+		line_buffer[line_offset++] = c;
+
+	if (line_offset >= LINE_BUFFER_SIZE ||
+	    offset + line_offset >= region_size || c == '\n') {
+		flashconsole_tx_flush_internal();
+	}
+
+	spin_unlock(&flashconsole_lock);
+}
+
+void flashconsole_tx_flush(void)
+{
+	if (busy || !rdev_ptr)
+		return;
+
+	spin_lock(&flashconsole_lock);
+	flashconsole_tx_flush_internal();
+	spin_unlock(&flashconsole_lock);
 }
