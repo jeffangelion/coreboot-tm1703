@@ -15,7 +15,7 @@ ramstage-y += ramstage.c
 ramstage-y += hda_verb.c
 
 ramstage-$(CONFIG_MAINBOARD_USE_LIBGFXINIT) += gma-mainboard.ads
-# ramstage-$(CONFIG_DRIVERS_OPTION_CFR_ENABLED) += cfr.c
+ramstage-$(CONFIG_DRIVERS_OPTION_CFR) += cfr.c
 
 # NVIDIA GeForce MX150 (GP108M) VBIOS for ACPI _ROM method
 cbfs-files-y += pci10de,1d12.rom
