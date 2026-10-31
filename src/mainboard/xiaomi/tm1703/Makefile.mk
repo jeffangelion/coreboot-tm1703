@@ -1,0 +1,37 @@
+## SPDX-License-Identifier: GPL-2.0-only
+
+subdirs-y += spd
+
+CPPFLAGS_common += -I$(src)/mainboard/$(MAINBOARDDIR)/include
+
+bootblock-y += bootblock.c
+bootblock-y += gpio_early.c
+
+romstage-y += romstage.c
+romstage-y += spd/spd_util.c
+
+ramstage-y += gpio.c
+ramstage-y += ramstage.c
+ramstage-y += hda_verb.c
+
+ramstage-$(CONFIG_MAINBOARD_USE_LIBGFXINIT) += gma-mainboard.ads
+ramstage-$(CONFIG_DRIVERS_OPTION_CFR) += cfr.c
+
+# NVIDIA GeForce MX150 (GP108M) VBIOS for ACPI _ROM method
+cbfs-files-y += pci10de,1d12.rom
+pci10de,1d12.rom-file := 3rdparty/blobs/mainboard/$(MAINBOARDDIR)/pci10de,1d12.rom
+pci10de,1d12.rom-type := optionrom
+
+# The TM1703 EC reads its firmware at ME-relative offset 0x8000.
+# Keep the EC image in the FMAP-defined SI_EC region; board.fmd and
+# board_me_truncated.fmd describe the two supported ME layouts.
+# Add it after the descriptor and ME have been stitched.
+TM1703_EC_FW := $(call strip_quotes,$(CONFIG_TM1703_EC_FIRMWARE_FILE))
+
+PHONY += add_tm1703_ec
+
+add_tm1703_ec: add_intel_firmware $(TM1703_EC_FW)
+	printf "    CBFSTOOL   TM1703 EC -> coreboot.pre\n"
+	$(CBFSTOOL) $(obj)/coreboot.pre write -r SI_EC -f $(TM1703_EC_FW)
+
+$(obj)/coreboot.rom: add_tm1703_ec

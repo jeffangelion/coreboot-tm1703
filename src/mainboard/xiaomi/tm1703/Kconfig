@@ -1,0 +1,88 @@
+## SPDX-License-Identifier: GPL-2.0-only
+
+if BOARD_XIAOMI_TM1703
+
+config BOARD_SPECIFIC_OPTIONS
+	def_bool y
+	select BOARD_ROMSIZE_KB_16384
+	select DRIVERS_I2C_HID
+	select DRIVERS_OPTION_CFR_ENABLED if PAYLOAD_EDK2 && SMMSTORE
+	select DRIVERS_PCIE_GENERIC
+	select DRIVERS_PCIE_RTD3_DEVICE
+	select HAVE_ACPI_RESUME
+	select HAVE_ACPI_TABLES
+	select HAVE_CMOS_DEFAULT
+	select HAVE_OPTION_TABLE
+	select HAVE_SPD_IN_CBFS
+	select INTEL_GMA_HAVE_VBT
+	select MAINBOARD_HAS_LIBGFXINIT
+	select SOC_INTEL_COMMON_BLOCK_HDA_VERB
+	select SOC_INTEL_KABYLAKE
+	select SMMSTORE
+	select SYSTEM_TYPE_LAPTOP
+
+config MAINBOARD_DIR
+	default "xiaomi/tm1703"
+
+config MAINBOARD_PART_NUMBER
+	default "Mi Notebook Air 13.3-inch Gen 3 (TM1703)"
+
+config VGA_BIOS_ID
+	default "8086,5917"
+
+config INTEL_GMA_VBT_FILE
+	default "src/mainboard/\$(MAINBOARDDIR)/data.vbt"
+
+config FMDFILE
+	default "src/mainboard/xiaomi/tm1703/board.fmd"
+
+config TM1703_EC_FIRMWARE_FILE
+	string "TM1703 EC firmware file"
+	default "3rdparty/blobs/mainboard/\$(MAINBOARDDIR)/ec.bin"
+	help
+		Path to the TM1703 EC firmware image extracted from a user-owned
+		firmware dump. The image is written to the FMAP SI_EC region after
+		the Intel descriptor and ME have been added.
+
+config SMMSTORE_SIZE
+	default 0x40000
+
+config CONSOLE_SPI_FLASH_BUFFER_SIZE
+	default 0x20000
+
+config DIMM_MAX
+	default 1
+
+config DIMM_SPD_SIZE
+	default 512
+
+config CBFS_SIZE
+	default 0x64f000
+
+config MRC_SETTINGS_CACHE_SIZE
+	default 0x10000
+
+config MRC_SETTINGS_PROTECT
+	default y
+
+# Setting this breaks SK Hynix NVMe SSD link
+config PCIEXP_L1_SUB_STATE
+	default n
+
+config PCIEXP_CLK_PM
+	default n
+
+# Required to preserve ICC profiles and NVMe PCIe clocking when me_cleaner is used
+config ME_CLEANER_ARGS
+	string
+	default "-S --whitelist MFS"
+
+# Laptops must not power on automatically when AC charger is plugged in
+config POWER_STATE_DEFAULT_ON_AFTER_FAILURE
+	default n
+
+# This platform has limited means to display POST codes
+config NO_POST
+	default y
+
+endif
