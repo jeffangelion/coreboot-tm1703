@@ -2168,7 +2168,7 @@ void acpigen_write_rom(void *bios, const size_t length)
 	acpigen_pop_len();
 
 	/* If (LGreater (Local0, length - 4096)) */
-	acpigen_write_if_lgreater_op_int(LOCAL0_OP, length - 4096);
+	acpigen_write_if_lgreater_op_int(LOCAL0_OP, length >= 4096 ? length - 4096 : 0);
 
 	/* Subtract (length, Local0, Local2) */
 	acpigen_emit_byte(SUBTRACT_OP);
