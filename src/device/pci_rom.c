@@ -132,14 +132,29 @@ struct rom_header *pci_rom_probe(const struct device *dev)
 	return rom_header;
 }
 
+size_t pci_rom_size(const struct rom_header *rom)
+{
+	if (!rom)
+		return 0;
+
+	if (le16_to_cpu(rom->signature) == PCI_ROM_HDR) {
+		const struct pci_data *rom_data =
+			(const void *)rom + le16_to_cpu(rom->data);
+		if (rom_data->ilen)
+			return le16_to_cpu(rom_data->ilen) * 512;
+	}
+
+	return rom->size * 512;
+}
+
 static void *pci_ram_image_start = (void *)PCI_RAM_IMAGE_START;
 
 struct rom_header *pci_rom_load(struct device *dev,
 				struct rom_header *rom_header)
 {
-	struct pci_data * rom_data;
-	unsigned int rom_size;
-	unsigned int image_size=0;
+	struct pci_data *rom_data;
+	size_t rom_size;
+	unsigned int image_size = 0;
 
 	do {
 		/* Get next image. */
@@ -155,7 +170,9 @@ struct rom_header *pci_rom_load(struct device *dev,
 	if (rom_data->type != 0)
 		return NULL;
 
-	rom_size = rom_header->size * 512;
+	rom_size = pci_rom_size(rom_header);
+	if (!rom_size)
+		return NULL;
 
 	/*
 	 * We check to see if the device thinks it is a VGA device not
@@ -167,7 +184,7 @@ struct rom_header *pci_rom_load(struct device *dev,
 		if (dev != vga_pri) return NULL; /* Only one VGA supported. */
 		if ((void *)PCI_VGA_RAM_IMAGE_START != rom_header) {
 			printk(BIOS_DEBUG,
-			       "Copying VGA ROM Image from %p to 0x%x, 0x%x bytes\n",
+			       "Copying VGA ROM Image from %p to 0x%x, 0x%zx bytes\n",
 			       rom_header, PCI_VGA_RAM_IMAGE_START, rom_size);
 			memcpy((void *)PCI_VGA_RAM_IMAGE_START, rom_header,
 			       rom_size);
@@ -177,7 +194,7 @@ struct rom_header *pci_rom_load(struct device *dev,
 		return (struct rom_header *)(PCI_VGA_RAM_IMAGE_START);
 	}
 
-	printk(BIOS_DEBUG, "Copying non-VGA ROM image from %p to %p, 0x%x bytes\n",
+	printk(BIOS_DEBUG, "Copying non-VGA ROM image from %p to %p, 0x%zx bytes\n",
 	       rom_header, pci_ram_image_start, rom_size);
 
 	dev->pci_vga_option_rom = (struct rom_header *)pci_ram_image_start;
@@ -279,25 +296,11 @@ void pci_rom_run(struct device *dev)
 /* ACPI */
 #if CONFIG(HAVE_ACPI_TABLES)
 
-static size_t pci_rom_size(const struct rom_header *rom)
-{
-	if (!rom)
-		return 0;
-
-	if (le16_to_cpu(rom->signature) == PCI_ROM_HDR) {
-		const struct pci_data *rom_data =
-			(const void *)rom + le16_to_cpu(rom->data);
-		if (rom_data->ilen)
-			return le16_to_cpu(rom_data->ilen) * 512;
-	}
-
-	return rom->size * 512;
-}
-
 void pci_rom_ssdt(const struct device *device)
 {
 	const struct rom_header *rom;
 	static size_t ngfx;
+	size_t rom_size;
 
 	/* Only handle display devices */
 	if ((device->class >> 16) != PCI_BASE_CLASS_DISPLAY)
@@ -312,9 +315,16 @@ void pci_rom_ssdt(const struct device *device)
 	if (!rom) {
 		/* Probe for option rom */
 		rom = pci_rom_probe(device);
-		if (!rom || !rom->size) {
+		if (!rom) {
 			printk(BIOS_WARNING, "%s: Missing PCI Option ROM\n",
-			dev_path(device));
+			       dev_path(device));
+			return;
+		}
+
+		rom_size = pci_rom_size(rom);
+		if (!rom_size) {
+			printk(BIOS_ERR, "%s: ROM has zero length!\n",
+			       dev_path(device));
 			return;
 		}
 
@@ -324,31 +334,25 @@ void pci_rom_ssdt(const struct device *device)
 			return;
 		}
 
-		const size_t probe_size = pci_rom_size(rom);
-		if (!probe_size) {
-			printk(BIOS_ERR, "%s: ROM has zero length!\n",
-			dev_path(device));
-			return;
-		}
-
-		void *cbrom = cbmem_add(CBMEM_ID_ROM0 + ngfx, probe_size);
+		void *cbrom = cbmem_add(CBMEM_ID_ROM0 + ngfx, rom_size);
 		if (!cbrom) {
 			printk(BIOS_ERR, "%s: Failed to allocate CBMEM.\n",
-			dev_path(device));
+			       dev_path(device));
 			return;
 		}
 		/* Increment CBMEM id for next device */
 		ngfx++;
 
-		memcpy(cbrom, rom, probe_size);
+		memcpy(cbrom, rom, rom_size);
 
 		rom = cbrom;
-	}
-
-	const size_t rom_size = pci_rom_size(rom);
-	if (!rom_size) {
-		printk(BIOS_ERR, "%s: ROM has zero length!\n", dev_path(device));
-		return;
+	} else {
+		rom_size = pci_rom_size(rom);
+		if (!rom_size) {
+			printk(BIOS_ERR, "%s: ROM has zero length!\n",
+			       dev_path(device));
+			return;
+		}
 	}
 
 	const char *scope = acpi_device_path(device);
