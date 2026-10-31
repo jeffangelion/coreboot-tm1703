@@ -1705,6 +1705,35 @@ SHA-256 `build/coreboot.rom`:
 0a88e8b75cc27130e18a3e305fcd8538ac4e77e8fe59e8f564311adabd08d614
 ```
 
+### g31: реализация Coreboot Form Representation (CFR)
+
+Причина:
+Предоставление пользователю графического интерфейса настройки аппаратных параметров coreboot непосредственно в меню полезной нагрузки EDK2 UefiPayloadPkg ("Platform Setup Menu") с сохранением изменений в CMOS/SMMSTORE.
+
+Выполненные изменения:
+1. Создан `src/mainboard/xiaomi/tm1703/cfr.c` с объявлениями форм CFR:
+   - Меню `System` (`FORM_ID_SYSTEM`):
+     - `hyper_threading` (Hyper-Threading Enable/Disable);
+     - `vtd` (Intel Virtualization Technology for Directed I/O VT-d Enable/Disable);
+     - `power_on_after_fail` (AC Power State After Failure: Always Off, Always On, Previous State);
+     - `dvmt_prealloc` (DVMT 5.0 Pre-Allocated Graphic Memory: 0M, 32M, 64M, 128M, 256M);
+     - `dvmt_total` (DVMT 5.0 Total Graphic Memory: 128M, 256M, MAX);
+     - `legacy_8254_timer` (Legacy 8254 Timer: Disable, Enable);
+     - `pcie_aspm` (PCIe ASPM: Disable, L0s, L1, L0sL1, Auto);
+     - `pcie_l1ss` (PCIe L1 Substates: Disable, L1.1, L1.2, Auto);
+     - `pcie_speed` (PCIe Speed: Auto, Gen1, Gen2, Gen3);
+     - `pcie_clk_pm` (PCIe Clock Power Management: Disable, Enable).
+   - Опция `s0ix_enable` намеренно исключена во избежание сбоев энергопотребления и нарушения штатного спящего режима ACPI S3 (Suspend-to-RAM).
+2. В `src/mainboard/xiaomi/tm1703/Makefile.mk` подключена сборка `ramstage-$(CONFIG_DRIVERS_OPTION_CFR) += cfr.c`.
+3. В `src/mainboard/xiaomi/tm1703/Kconfig` добавлен автоматический селект `select DRIVERS_OPTION_CFR_ENABLED if PAYLOAD_EDK2 && SMMSTORE`.
+4. `CONFIG_LOCALVERSION` обновлен до `g31`.
+5. Проверено на железе: пункт "Platform Setup Menu" успешно отображается и функционирует в EDK2 UI.
+
+SHA-256 `build/coreboot.rom`:
+```text
+da900121b71953df760fbda979ec6e1aa10861cbc7e5a204f31ff15713c6de3a
+```
+
 ## Условный roadmap
 
 ### Обязательные этапы для полноценной рабочей системы
@@ -1815,6 +1844,11 @@ SHA-256 `build/coreboot.rom`:
    общий буфер, смещение и SPI-транзакции между BSP и AP, после чего заменить
    текущее BSP-only поведение и повторно проверить native MP init на железе.
 7. Перенести дополнительные OEM ACPI-функции (интерфейс `WMIX` / `XMCC` для переключения профилей вентилятора/производительности через EC, интерфейс `AMW0` и переключатель `RBTN`), если в них возникнет необходимость.
+8. [Выполнено в g31] Реализация Coreboot Form Representation (CFR):
+   - Реализован `cfr.c` с формами меню `System` (Hyper-Threading, VT-d, Power-on after fail, DVMT Pre-allocated, DVMT Total Gfx Mem, Legacy 8254 Timer, PCIe ASPM, L1 Substates, PCIe Speed, Clock PM);
+   - Исключена опция `s0ix_enable` для предотвращения нарушения спящего режима ACPI S3;
+   - Добавлен селект `DRIVERS_OPTION_CFR_ENABLED if PAYLOAD_EDK2 && SMMSTORE`;
+   - Проверено на железе: пункт Platform Setup Menu корректно отображается в UI EDK2 UefiPayloadPkg.
 
 ## Ограничения
 
