@@ -240,6 +240,71 @@ static void map_pages(unsigned long base_address, unsigned long length)
 	low_phys_base = base_address;
 }
 
+static const char sysfs_table_path[] = "/sys/firmware/coreboot/tables";
+
+static int try_sysfs_lbtable(void)
+{
+	int sfd;
+	struct lb_header hdr;
+	uint8_t *buf;
+	size_t total_size;
+	ssize_t nread;
+	size_t offset;
+
+	sfd = open(sysfs_table_path, O_RDONLY);
+	if (sfd < 0)
+		return 0;
+
+	if (read(sfd, &hdr, sizeof(hdr)) != sizeof(hdr)) {
+		close(sfd);
+		return 0;
+	}
+
+	if (memcmp(hdr.signature, "LBIO", 4) != 0) {
+		close(sfd);
+		return 0;
+	}
+
+	if (compute_ip_checksum(&hdr, sizeof(hdr)) != 0) {
+		close(sfd);
+		return 0;
+	}
+
+	total_size = sizeof(hdr) + hdr.table_bytes;
+	buf = malloc(total_size);
+	if (!buf) {
+		close(sfd);
+		return 0;
+	}
+
+	memcpy(buf, &hdr, sizeof(hdr));
+
+	offset = sizeof(hdr);
+	while (offset < total_size) {
+		nread = read(sfd, buf + offset, total_size - offset);
+		if (nread <= 0)
+			break;
+		offset += nread;
+	}
+	close(sfd);
+
+	if (offset != total_size) {
+		free(buf);
+		return 0;
+	}
+
+	if (hdr.table_checksum !=
+	    compute_ip_checksum(buf + sizeof(hdr), hdr.table_bytes)) {
+		free(buf);
+		return 0;
+	}
+
+	lbtable = (const struct lb_header *)buf;
+	low_phys_mem = buf;
+	low_phys_base = 0;
+	return 1;
+}
+
 /****************************************************************************
  * get_lbtable
  *
@@ -252,13 +317,17 @@ void get_lbtable(void)
 	if (lbtable != NULL)
 		return;
 
+	/* Try reading coreboot tables from sysfs first */
+	if (try_sysfs_lbtable())
+		return;
+
 	/* The coreboot table is located in low physical memory, which may be
 	 * conveniently accessed by calling mmap() on /dev/mem.
 	 */
 
 	if ((fd = open("/dev/mem", O_RDONLY, 0)) < 0) {
-		fprintf(stderr, "%s: Can not open /dev/mem for reading: %s\n",
-			prog_name, strerror(errno));
+		fprintf(stderr, "%s: Can not open %s or /dev/mem for reading: %s\n",
+			prog_name, sysfs_table_path, strerror(errno));
 		exit(1);
 	}
 
