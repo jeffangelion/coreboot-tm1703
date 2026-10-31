@@ -140,7 +140,7 @@ size_t pci_rom_size(const struct rom_header *rom)
 	if (le16_to_cpu(rom->signature) == PCI_ROM_HDR) {
 		const struct pci_data *rom_data =
 			(const void *)rom + le16_to_cpu(rom->data);
-		if (rom_data->ilen)
+		if (le32_to_cpu(rom_data->signature) == PCI_DATA_HDR && rom_data->ilen)
 			return le16_to_cpu(rom_data->ilen) * 512;
 	}
 
