@@ -86,6 +86,7 @@ static void cmos_set_iopl(int level);
 #if defined(__linux__)
 static int nvram_fd = -1;
 static int use_nvram_dev = 0;
+static int nvram_is_ro = 0;
 #endif
 
 /* no need to initialize anything */
@@ -131,6 +132,12 @@ static void cmos_hal_write(unsigned index, unsigned char value)
 
 #if defined(__linux__)
 	if (use_nvram_dev) {
+		if (nvram_is_ro) {
+			fprintf(stderr,
+				"%s: Cannot write to CMOS: /dev/nvram opened read-only (Permission denied)\n",
+				prog_name);
+			exit(1);
+		}
 		if (pwrite(nvram_fd, &value, 1, (off_t)(index - CMOS_RTC_AREA_SIZE)) != 1) {
 			fprintf(stderr, "%s: Failed to write byte %u to /dev/nvram: %s\n",
 				prog_name, index, strerror(errno));
@@ -193,12 +200,14 @@ static void cmos_set_iopl(int level)
 		if (!use_nvram_dev)
 			iopl(0);
 		use_nvram_dev = 0;
+		nvram_is_ro = 0;
 		return;
 	}
 
 	/* Try direct port I/O first */
 	if (iopl(level) == 0) {
 		use_nvram_dev = 0;
+		nvram_is_ro = 0;
 		return;
 	}
 
@@ -207,8 +216,13 @@ static void cmos_set_iopl(int level)
 	 */
 	if (nvram_fd < 0) {
 		nvram_fd = open("/dev/nvram", O_RDWR);
-		if (nvram_fd < 0)
+		if (nvram_fd >= 0) {
+			nvram_is_ro = 0;
+		} else {
 			nvram_fd = open("/dev/nvram", O_RDONLY);
+			if (nvram_fd >= 0)
+				nvram_is_ro = 1;
+		}
 	}
 
 	if (nvram_fd >= 0) {
