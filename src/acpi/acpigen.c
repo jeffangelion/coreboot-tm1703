@@ -2153,8 +2153,8 @@ void acpigen_write_rom(void *bios, const size_t length)
 	/* Store (Local1, Local3) */
 	acpigen_write_store_ops(LOCAL1_OP, LOCAL3_OP);
 
-	/* If (LGreater (Local0, length)) */
-	acpigen_write_if_lgreater_op_int(LOCAL0_OP, length);
+	/* If (LGreater (Local0, length - 1)) */
+	acpigen_write_if_lgreater_op_int(LOCAL0_OP, length - 1);
 
 	/* Return(Buffer(Local1){0}) */
 	acpigen_emit_byte(RETURN_OP);
@@ -2167,8 +2167,9 @@ void acpigen_write_rom(void *bios, const size_t length)
 	/* Pop if */
 	acpigen_pop_len();
 
-	/* If (LGreater (Local0, length - 4096)) */
-	acpigen_write_if_lgreater_op_int(LOCAL0_OP, length - 4096);
+	/* Limit reads that start within the final 4 KiB of the ROM. */
+	if (length > 4096)
+		acpigen_write_if_lgreater_op_int(LOCAL0_OP, length - 4096);
 
 	/* Subtract (length, Local0, Local2) */
 	acpigen_emit_byte(SUBTRACT_OP);
@@ -2182,11 +2183,11 @@ void acpigen_write_rom(void *bios, const size_t length)
 	/* Store (Local2, Local1) */
 	acpigen_write_store_ops(LOCAL2_OP, LOCAL1_OP);
 
-	/* Pop if */
+	/* Pop inner if */
 	acpigen_pop_len();
 
-	/* Pop if */
-	acpigen_pop_len();
+	if (length > 4096)
+		acpigen_pop_len();
 
 	/* Name (ROM1, Buffer (Local3) {0}) */
 	acpigen_write_name("ROM1");
