@@ -12,15 +12,8 @@
 
 void mainboard_silicon_init_params(FSP_SIL_UPD *params)
 {
-	const int dgpu_pwok = gpio_get(GPP_G3);
-
 	/* Configure board pads before FSP SiliconInit(). */
 	mainboard_configure_gpios();
-
-	printk(BIOS_INFO, "TM1703: dGPU PWOK (GPP_G3) = %d\n", dgpu_pwok);
-	if (!dgpu_pwok)
-		printk(BIOS_ERR,
-		       "TM1703: dGPU PWOK is low; releasing reset as OEM does\n");
 
 	/* APDT is satisfied by the time spent in FSP-M and raminit. */
 	gpio_set(GPP_G1, 1);
@@ -65,8 +58,7 @@ static void mainboard_fill_ssdt(const struct device *dev)
 			    FIELD_BYTEACC | FIELD_LOCK | FIELD_PRESERVE);
 	acpigen_write_scope_end();
 
-	printk(BIOS_INFO, "TM1703: UCSI mailbox at %p, emitted \\UCBA and USBC opregion\n",
-	       region_ptr);
+	printk(BIOS_DEBUG, "TM1703: UCSI mailbox at %p\n", region_ptr);
 }
 
 static void mainboard_enable(struct device *dev)

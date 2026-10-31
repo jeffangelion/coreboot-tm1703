@@ -10,7 +10,7 @@
 
 void mainboard_memory_init_params(FSPM_UPD *mupd)
 {
-	FSP_M_CONFIG *const mem_cfg = &mupd->FspmConfig;
+	FSP_M_CONFIG *mem_cfg = &mupd->FspmConfig;
 	const unsigned int spd_index = gpio_get(GPP_D0) |
 		(gpio_get(GPP_D1) << 1) |
 		(gpio_get(GPP_D2) << 2) |
