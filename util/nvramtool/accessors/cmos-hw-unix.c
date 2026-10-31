@@ -83,6 +83,11 @@ static void cmos_set_iopl(int level);
 
 #if defined(__i386__) || defined(__x86_64__)
 
+#if defined(__linux__)
+static int nvram_fd = -1;
+static int use_nvram_dev = 0;
+#endif
+
 /* no need to initialize anything */
 static void cmos_hal_init(__attribute__((unused)) void *data)
 {
@@ -93,6 +98,18 @@ static unsigned char cmos_hal_read(unsigned index)
 	unsigned short port_0, port_1;
 
 	assert(!verify_cmos_byte_index(index));
+
+#if defined(__linux__)
+	if (use_nvram_dev) {
+		unsigned char val = 0;
+		if (pread(nvram_fd, &val, 1, (off_t)(index - CMOS_RTC_AREA_SIZE)) != 1) {
+			fprintf(stderr, "%s: Failed to read byte %u from /dev/nvram: %s\n",
+				prog_name, index, strerror(errno));
+			return 0;
+		}
+		return val;
+	}
+#endif
 
 	if (index < 128) {
 		port_0 = 0x70;
@@ -111,6 +128,16 @@ static void cmos_hal_write(unsigned index, unsigned char value)
 	unsigned short port_0, port_1;
 
 	assert(!verify_cmos_byte_index(index));
+
+#if defined(__linux__)
+	if (use_nvram_dev) {
+		if (pwrite(nvram_fd, &value, 1, (off_t)(index - CMOS_RTC_AREA_SIZE)) != 1) {
+			fprintf(stderr, "%s: Failed to write byte %u to /dev/nvram: %s\n",
+				prog_name, index, strerror(errno));
+		}
+		return;
+	}
+#endif
 
 	if (index < 128) {
 		port_0 = 0x70;
@@ -157,6 +184,41 @@ static void cmos_set_iopl(int level)
 			}
 		}
 	}
+#elif defined(__linux__)
+	if (level == 0) {
+		if (nvram_fd >= 0) {
+			close(nvram_fd);
+			nvram_fd = -1;
+		}
+		if (!use_nvram_dev)
+			iopl(0);
+		use_nvram_dev = 0;
+		return;
+	}
+
+	/* Try direct port I/O first */
+	if (iopl(level) == 0) {
+		use_nvram_dev = 0;
+		return;
+	}
+
+	/* Direct I/O failed (e.g. Linux Kernel Lockdown / Secure Boot).
+	 * Fall back to /dev/nvram character device.
+	 */
+	if (nvram_fd < 0) {
+		nvram_fd = open("/dev/nvram", O_RDWR);
+		if (nvram_fd < 0)
+			nvram_fd = open("/dev/nvram", O_RDONLY);
+	}
+
+	if (nvram_fd >= 0) {
+		use_nvram_dev = 1;
+		return;
+	}
+
+	fprintf(stderr, "%s: iopl() failed and /dev/nvram unavailable.  "
+		"You must be root to do this.\n", prog_name);
+	exit(1);
 #else
 	if (iopl(level)) {
 		fprintf(stderr, "%s: iopl() system call failed.  "
